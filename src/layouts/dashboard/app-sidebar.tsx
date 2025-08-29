@@ -25,6 +25,20 @@ const data = {
       title: "Assessment Result",
       url: "/result",
     },
+    {
+      title: "Company Management",
+      url: "/company-management",
+      items: [
+        {
+          title: "Companies",
+          url: "/company-management/companies",
+        },
+        {
+          title: "Users",
+          url: "/company-management/users",
+        },
+      ],
+    },
   ],
 };
 

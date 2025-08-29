@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = (userData: User) => {
     setUser(userData);
-    router.push("/");
+    router.push("/test");
     sessionStorage.setItem("evalence_user", JSON.stringify(userData));
   };
 
