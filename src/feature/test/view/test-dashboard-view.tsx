@@ -16,30 +16,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { useGetAllTestsQuery } from "@/services/rtk-query";
 import { useStartTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
-import {
-  BookOpen,
-  Calendar,
-  Clock,
-  Edit,
-  Filter,
-  Play,
-  Plus,
-  Search,
-  Trash2,
-} from "lucide-react";
+import { Clock, Edit, Plus } from "lucide-react";
 import { useState } from "react";
+import { SearchFilter } from "../components/search-filter";
+import { TestStatistics } from "../components/test-statistics";
 import { TestCreationForm } from "./test-creation-form";
 import { TestTakingInterface } from "./test-taking-interface-view";
 
@@ -77,10 +61,6 @@ const mockTests = [
         ],
       },
     ],
-    totalQuestions: 2,
-    totalPoints: 8,
-    assignedCompanies: 3,
-    completedAttempts: 45,
   },
   {
     id: "2",
@@ -104,10 +84,6 @@ const mockTests = [
         ],
       },
     ],
-    totalQuestions: 1,
-    totalPoints: 5,
-    assignedCompanies: 5,
-    completedAttempts: 78,
   },
   {
     id: "3",
@@ -119,10 +95,6 @@ const mockTests = [
     startDate: "2024-11-01T00:00:00.000Z",
     endDate: "2024-11-30T23:59:59.000Z",
     questions: [],
-    totalQuestions: 0,
-    totalPoints: 0,
-    assignedCompanies: 2,
-    completedAttempts: 23,
   },
   {
     id: "4",
@@ -134,10 +106,6 @@ const mockTests = [
     startDate: "2024-12-15T00:00:00.000Z",
     endDate: "2025-03-15T23:59:59.000Z",
     questions: [],
-    totalQuestions: 0,
-    totalPoints: 0,
-    assignedCompanies: 4,
-    completedAttempts: 12,
   },
 ];
 
@@ -188,21 +156,17 @@ export function TestDashboard() {
   };
 
   const handleStartTest = async () => {
-    if (
-      !selectedTest
-      //  || !user
-    ) {
+    if (!selectedTest || !user) {
       return;
     }
     try {
-      await testAttemptMut({
+      const result = await testAttemptMut({
         testId: selectedTest?.id,
         userId: user?.id || "000",
-      });
-      sessionStorage.setItem(
-        "currentTestAttempt",
-        `${testAttemptMutState?.data?.id}`
-      );
+      }).unwrap();
+      debugger;
+      // Store attempt ID in session storage
+      sessionStorage.setItem("currentTestAttempt", `${result?.id}`);
       setShowTestInterface(true);
     } catch (error) {
       console.error("Failed to start test attempt:", error);
@@ -211,6 +175,10 @@ export function TestDashboard() {
 
   const headerText = getHeaderText();
   const canCreateTests = user?.role === "super_admin";
+
+  const totalTests = testsData.length;
+  const activeTests = testsData.filter((t) => t.isActive).length;
+  const completedAttempts = testsData.reduce((acc, test) => acc + 1, 0);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -243,90 +211,23 @@ export function TestDashboard() {
       {/* Filters and Search */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search assessment by title or description..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Assessments</SelectItem>
-                <SelectItem value="active">Active Assessments</SelectItem>
-                <SelectItem value="inactive">Inactive Assessments</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <SearchFilter
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
         </CardContent>
       </Card>
 
       {/* Test Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  {user?.role === "employee"
-                    ? "Assigned Tests"
-                    : "Total Evaluation"}
-                </p>
-                <p className="text-2xl font-bold">
-                  {isLoading ? "..." : testsData.length}
-                </p>
-              </div>
-              <BookOpen className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Active Evaluations
-                </p>
-                <p className="text-2xl font-bold">
-                  {isLoading
-                    ? "..."
-                    : testsData.filter((t) => t.isActive).length}
-                </p>
-              </div>
-              <Play className="h-8 w-8 text-accent" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Completed Assessments
-                </p>
-                <p className="text-2xl font-bold">
-                  {testsData.reduce((acc, test) => acc + 1, 0)}
-                </p>
-                {/* <p className="text-2xl font-bold">
-                  {testsData.reduce(
-                    (acc, test) => acc + test.completedAttempts,
-                    0
-                  )}
-                </p> */}
-              </div>
-              <Calendar className="h-8 w-8 text-chart-2" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <TestStatistics
+        isLoading={isLoading}
+        totalTests={totalTests}
+        activeTests={activeTests}
+        completedAttempts={completedAttempts}
+        userRole={user?.role}
+      />
 
       {/* Test Listing */}
       <Tabs defaultValue="grid" className="space-y-4">
@@ -392,9 +293,6 @@ export function TestDashboard() {
                             }}
                           >
                             <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       )}
@@ -567,7 +465,7 @@ export function TestDashboard() {
       {/* Test Taking Interface Dialog */}
       <Dialog open={showTestInterface} onOpenChange={setShowTestInterface}>
         <DialogContent
-          onInteractOutside={(e) => e.preventDefault()} // prevents closing on outside click
+          onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
           className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto"
         >
