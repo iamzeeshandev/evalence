@@ -3,14 +3,19 @@ export interface AttemptAnswer {
   questionId: string;
   userId: string;
   selectedOptionIds: string[];
-  timeSpentIncrementSec: number;
+  timeSpentIncrementSec?: number;
 }
 export type AttemptAnswerPayload = Omit<AttemptAnswer, "attemptId">;
 
-export interface AttemptAnswerResponse extends AttemptAnswer {
+export interface AttemptAnswerResponse {
   id: string;
-  createdAt: string;
-  updatedAt: string;
+  userId?: string;
+  attemptId: string;
+  questionId: string;
   isCorrect: boolean;
   pointsAwarded: number;
+  selectedOptionIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  timeSpentIncrementSec?: number;
 }

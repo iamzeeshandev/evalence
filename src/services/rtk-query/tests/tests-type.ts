@@ -43,7 +43,7 @@ export interface Question {
   text: string;
   type: string;
   points: number;
-  imageUrl: string;
+  imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   options: Option[];
@@ -53,7 +53,7 @@ export interface Option {
   id: string;
   text: string;
   isCorrect: boolean;
-  imageUrl: any;
+  imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }

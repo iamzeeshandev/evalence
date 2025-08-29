@@ -366,7 +366,9 @@ export function TestResultsPage({
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-purple-500" />
-                        <span>{formatDate(attempt?.submittedAt)}</span>
+                        <span>
+                          {formatDate(attempt?.submittedAt as string)}
+                        </span>
                       </div>
                     </div>
                   </div>
