@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
 
 export type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -30,6 +31,7 @@ const user = {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
+  const { user: loggedUser } = useAuth();
 
   const handleLogout = () => {
     router.push("/auth/sign-in");
@@ -49,15 +51,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <DropdownMenuTrigger asChild>
               <div className="flex items-center gap-2 cursor-pointer">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage
+                    src={user.avatar}
+                    alt={`${loggedUser?.firstName} ${loggedUser?.lastName}`}
+                  />
                   <AvatarFallback>
-                    {user.name.charAt(0).toUpperCase()}
+                    {`${loggedUser?.firstName} ${loggedUser?.lastName}`
+                      .charAt(0)
+                      .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden sm:flex flex-col text-left">
-                  <span className="text-sm font-medium">{user.name}</span>
+                  <span className="text-sm font-medium">{`${loggedUser?.firstName} ${loggedUser?.lastName}`}</span>
                   <span className="text-xs text-muted-foreground">
-                    {user.email}
+                    {loggedUser?.email}
                   </span>
                 </div>
               </div>

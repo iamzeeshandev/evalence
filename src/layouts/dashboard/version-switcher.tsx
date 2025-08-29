@@ -28,7 +28,6 @@ export function VersionSwitcher({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
@@ -38,11 +37,8 @@ export function VersionSwitcher({
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="font-medium">HR Integrated</span>
-                <span className="">v{selectedVersion}</span>
               </div>
-              <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
-          </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width)"
             align="start"
