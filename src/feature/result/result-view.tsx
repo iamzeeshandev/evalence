@@ -204,7 +204,7 @@ const mockTestAttempts: TestAttemptResponse[] = [
 interface TestResultsPageProps {
   // Props for API integration
   users?: any[];
- 
+
   loading?: boolean;
 }
 
@@ -298,16 +298,16 @@ export function TestResultsPage({
         <CardContent>
           <Select value={selectedUserId} onValueChange={handleUserSelect}>
             <SelectTrigger className="w-full max-w-md">
-              <SelectValue placeholder="Choose a user to view their test results" />
+              <SelectValue placeholder="View user assessment results" />
             </SelectTrigger>
             <SelectContent>
               {users.map((user) => (
                 <SelectItem key={user.id} value={user.id}>
                   <div className="flex flex-col">
-                    <span className="font-medium">{user.name}</span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="font-medium">{`${user?.firstName} ${user?.lastName}`}</span>
+                    {/* <span className="text-sm text-muted-foreground">
                       {user.email}
-                    </span>
+                    </span> */}
                   </div>
                 </SelectItem>
               ))}

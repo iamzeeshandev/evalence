@@ -56,12 +56,21 @@ const testAttemptsApi = appApi
           { type: "TestAttempts", id: `list-${id}` },
         ],
       }),
+
+      getTestAttemptsCount: build.query<number, unknown>({
+        query: () => ({
+          url: `/test-attempts/attempt/counts`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "TestAttempts", id: `test-counts` }],
+      }),
     }),
   });
 
 export const {
   useStartTestAttemptMutation,
   useSubmitTestAttemptMutation,
+  useGetTestAttemptsCountQuery,
   useLazyGetUserTestAttemptListByIdQuery,
   useGetTestAttemptByIdQuery,
 } = testAttemptsApi;

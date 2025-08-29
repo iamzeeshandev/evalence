@@ -19,7 +19,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { useGetAllTestsQuery } from "@/services/rtk-query";
-import { useStartTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
+import {
+  useGetTestAttemptsCountQuery,
+  useStartTestAttemptMutation,
+} from "@/services/rtk-query/test-attempt/test-attempt-api";
 import { Clock, Edit, Plus } from "lucide-react";
 import { useState } from "react";
 import { SearchFilter } from "../components/search-filter";
@@ -37,6 +40,7 @@ export function TestDashboard() {
   const [showEditForm, setShowEditForm] = useState(false);
 
   const { data: allTestsData, isLoading: isLoadingAll } = useGetAllTestsQuery();
+  const { data: testAttemptsCount } = useGetTestAttemptsCountQuery({});
   const [testAttemptMut, testAttemptMutState] = useStartTestAttemptMutation();
 
   const isLoading =
@@ -93,9 +97,7 @@ export function TestDashboard() {
   const headerText = getHeaderText();
   const canCreateTests = user?.role === "super_admin";
 
-  const totalTests = testsData.length;
-  const activeTests = testsData.filter((t) => t.isActive).length;
-  const completedAttempts = testsData.reduce((acc, test) => acc + 1, 0);
+  const completedAttempts = testsData.reduce((acc) => acc + 1, 0);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -140,9 +142,11 @@ export function TestDashboard() {
       {/* Test Statistics */}
       <TestStatistics
         isLoading={isLoading}
-        totalTests={totalTests}
-        activeTests={activeTests}
-        completedAttempts={completedAttempts}
+        totalTests={allTestsData?.length || 0}
+        activeTests={
+          allTestsData?.filter((test) => test?.isActive)?.length || 0
+        }
+        completedAttempts={testAttemptsCount || 0}
         userRole={user?.role}
       />
 
