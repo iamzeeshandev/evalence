@@ -1,6 +1,6 @@
 "use client";
 
-import { TestResultsPage } from "@/feature/user/user-view";
+import { TestResultsPage } from "@/feature/result/result-view";
 import { useGetAllUsersDropdownQuery } from "@/services/rtk-query";
 
 export default function Page() {

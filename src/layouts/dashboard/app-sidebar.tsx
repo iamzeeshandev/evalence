@@ -22,12 +22,8 @@ const data = {
       url: "/test",
     },
     {
-      title: "Evaluation Form Assignment",
-      url: "/test-assignment",
-    },
-    {
-      title: "Users",
-      url: "/user",
+      title: "Assessment Result",
+      url: "/result",
     },
   ],
 };

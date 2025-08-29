@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import {
-  useSubmitTestAttemptMutation,
-} from "@/services/rtk-query/test-attempt/test-attempt-api";
+import { useSubmitTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -14,9 +12,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSaveAttemptAnswerMutation } from "@/services/rtk-query/attempt-answer/attempt-answer-api";
+import { Option, TestResponse } from "@/services/rtk-query/tests/tests-type";
 
 interface TestTakingInterfaceProps {
-  test: any;
+  test: TestResponse;
   onClose: () => void;
 }
 
@@ -123,22 +122,28 @@ export function TestTakingInterface({
         <RadioGroup
           value={(answers[currentQuestionIndex] as string) || ""}
           onValueChange={handleAnswerChange}
-          className="space-y-3"
+          className="space-y-2 gap-0"
         >
-          {currentQuestion.options.map((option: any, index: number) => (
-            <div key={index} className="flex items-center space-x-2">
-              <RadioGroupItem
-                value={option.id || `option-${index}`}
-                id={`option-${index}`}
-              />
-              <Label
-                htmlFor={`option-${index}`}
-                className="flex-1 cursor-pointer"
+          {[...currentQuestion.options]
+            ?.sort((a, b) => a.text.localeCompare(b.text))
+            ?.map((option: Option, index: number) => (
+              <div
+                key={index}
+                // className="flex items-center space-x-2"
+                className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50"
               >
-                {option.text}
-              </Label>
-            </div>
-          ))}
+                <RadioGroupItem
+                  value={option.id || `option-${index}`}
+                  id={`option-${index}`}
+                />
+                <Label
+                  htmlFor={`option-${index}`}
+                  className="flex-1 cursor-pointer"
+                >
+                  {option.text}
+                </Label>
+              </div>
+            ))}
         </RadioGroup>
       );
     } else if (currentQuestion.type === "multiple") {
@@ -232,6 +237,13 @@ export function TestTakingInterface({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="relative inline-block w-full">
+            <img
+              src={currentQuestion.imageUrl || "/placeholder.svg"}
+              alt="Question"
+              className="w-full max-w-xl max-h-248 rounded-lg border"
+            />
+          </div>
           {renderQuestionOptions()}
         </CardContent>
       </Card>

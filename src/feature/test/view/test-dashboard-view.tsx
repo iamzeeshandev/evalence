@@ -27,88 +27,6 @@ import { TestStatistics } from "../components/test-statistics";
 import { TestCreationForm } from "./test-creation-form";
 import { TestTakingInterface } from "./test-taking-interface-view";
 
-const mockTests = [
-  {
-    id: "1",
-    title: "Mathematics Final Exam",
-    description:
-      "MCQ test covering fundamentals of mathematics including algebra, geometry, and calculus",
-    isActive: true,
-    duration: 60,
-    startDate: "2024-12-31T23:59:59.000Z",
-    endDate: "2025-01-31T23:59:59.000Z",
-    questions: [
-      {
-        text: "What is the derivative of x²?",
-        type: "single",
-        points: 5,
-        options: [
-          { text: "2x", isCorrect: true },
-          { text: "x²", isCorrect: false },
-          { text: "2", isCorrect: false },
-          { text: "x", isCorrect: false },
-        ],
-      },
-      {
-        text: "What is the value of π (pi) approximately?",
-        type: "single",
-        points: 3,
-        options: [
-          { text: "3.14159", isCorrect: true },
-          { text: "2.71828", isCorrect: false },
-          { text: "1.41421", isCorrect: false },
-          { text: "1.61803", isCorrect: false },
-        ],
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "JavaScript Fundamentals",
-    description:
-      "Comprehensive test on JavaScript basics, ES6 features, and modern development practices",
-    isActive: true,
-    duration: 45,
-    startDate: "2024-12-01T00:00:00.000Z",
-    endDate: "2025-02-28T23:59:59.000Z",
-    questions: [
-      {
-        text: "What is `const` in JavaScript?",
-        type: "single",
-        points: 5,
-        options: [
-          { text: "Block-scoped constant", isCorrect: true },
-          { text: "Function-scoped variable", isCorrect: false },
-          { text: "Global variable", isCorrect: false },
-          { text: "Hoisted variable", isCorrect: false },
-        ],
-      },
-    ],
-  },
-  {
-    id: "3",
-    title: "Data Structures & Algorithms",
-    description:
-      "Advanced test covering arrays, linked lists, trees, graphs, and algorithmic complexity",
-    isActive: false,
-    duration: 90,
-    startDate: "2024-11-01T00:00:00.000Z",
-    endDate: "2024-11-30T23:59:59.000Z",
-    questions: [],
-  },
-  {
-    id: "4",
-    title: "React Development",
-    description:
-      "Test on React components, hooks, state management, and modern React patterns",
-    isActive: true,
-    duration: 75,
-    startDate: "2024-12-15T00:00:00.000Z",
-    endDate: "2025-03-15T23:59:59.000Z",
-    questions: [],
-  },
-];
-
 export function TestDashboard() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
@@ -127,7 +45,7 @@ export function TestDashboard() {
       : user?.role === "company_admin";
 
   let testsData = [];
-  testsData = allTestsData || mockTests;
+  testsData = allTestsData || [];
 
   const filteredTests = testsData.filter((test) => {
     const matchesSearch =
