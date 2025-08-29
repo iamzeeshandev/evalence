@@ -57,7 +57,7 @@ const testAttemptsApi = appApi
         ],
       }),
 
-      getTestAttemptsCount: build.query<number, unknown>({
+      getTestAttemptsCount: build.query<number, { count: number }>({
         query: () => ({
           url: `/test-attempts/attempt/counts`,
           method: "GET",

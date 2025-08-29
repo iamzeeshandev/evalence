@@ -98,7 +98,8 @@ export function TestDashboard() {
   const canCreateTests = user?.role === "super_admin";
 
   const completedAttempts = testsData.reduce((acc) => acc + 1, 0);
-
+  const activeTests =
+    (allTestsData || [])?.filter((test) => test?.isActive)?.length || 0;
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -143,10 +144,8 @@ export function TestDashboard() {
       <TestStatistics
         isLoading={isLoading}
         totalTests={allTestsData?.length || 0}
-        activeTests={
-          allTestsData?.filter((test) => test?.isActive)?.length || 0
-        }
-        completedAttempts={testAttemptsCount || 0}
+        activeTests={activeTests}
+        completedAttempts={testAttemptsCount?.count || 0}
         userRole={user?.role}
       />
 

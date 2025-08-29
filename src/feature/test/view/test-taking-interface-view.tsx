@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/auth";
-import { useSubmitTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 import { useSaveAttemptAnswerMutation } from "@/services/rtk-query/attempt-answer/attempt-answer-api";
+import { useSubmitTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
 import { Option, TestResponse } from "@/services/rtk-query/tests/tests-type";
+import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface TestTakingInterfaceProps {
   test: TestResponse;
