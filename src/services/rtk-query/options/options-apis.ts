@@ -1,5 +1,4 @@
-import { appApi } from "..";
-
+import { appApi } from "@/services/rtk-base-api-service";
 const optionsApi = appApi
   .enhanceEndpoints({
     addTagTypes: ["Options"],

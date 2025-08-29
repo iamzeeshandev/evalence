@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,12 +16,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, Upload, X, ImageIcon, Edit } from "lucide-react";
+import { useFileUploadMutation } from "@/services/rtk-query/file/file-api";
+import {
+  useSaveTestMutation,
+  useUpdateTestMutation,
+} from "@/services/rtk-query";
 
 interface Question {
   text: string;
   type: "single";
   points: number;
+  imageUrl?: string;
   options: Array<{
     text: string;
     isCorrect: boolean;
@@ -28,23 +36,64 @@ interface Question {
 
 interface TestCreationFormProps {
   onClose: () => void;
+  testData?: any;
+  isEditing?: boolean;
 }
 
-export function TestCreationForm({ onClose }: TestCreationFormProps) {
+const useUploadFile = () => {
+  const uploadFile = async (file: File) => {
+    return new Promise<{
+      message: string;
+      filename: string;
+      originalName: string;
+      size: number;
+      imageUrl: string;
+    }>((resolve) => {
+      setTimeout(() => {
+        resolve({
+          message: "File uploaded successfully",
+          filename: `image-${Date.now()}-${Math.random()
+            .toString(36)
+            .substr(2, 9)}.png`,
+          originalName: file.name,
+          size: file.size,
+          imageUrl: `http://localhost:3000/uploads/image-${Date.now()}-${Math.random()
+            .toString(36)
+            .substr(2, 9)}.png`,
+        });
+      }, 1000);
+    });
+  };
+
+  return { uploadFile };
+};
+
+export function TestCreationForm({
+  onClose,
+  testData: initialTestData,
+  isEditing = false,
+}: TestCreationFormProps) {
   const [testData, setTestData] = useState({
-    title: "",
-    description: "",
-    isActive: true,
-    duration: 60,
-    startDate: "",
-    endDate: "",
+    title: initialTestData?.title || "",
+    description: initialTestData?.description || "",
+    isActive: initialTestData?.isActive ?? true,
+    duration: initialTestData?.duration || 60,
+    startDate: initialTestData?.startDate
+      ? new Date(initialTestData.startDate).toISOString().slice(0, 16)
+      : "",
+    endDate: initialTestData?.endDate
+      ? new Date(initialTestData.endDate).toISOString().slice(0, 16)
+      : "",
   });
 
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<Question[]>(
+    initialTestData?.questions || []
+  );
   const [currentQuestion, setCurrentQuestion] = useState<Question>({
     text: "",
     type: "single",
     points: 5,
+    imageUrl: "",
     options: [
       { text: "", isCorrect: false },
       { text: "", isCorrect: false },
@@ -52,6 +101,37 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
       { text: "", isCorrect: false },
     ],
   });
+
+  const [isUploading, setIsUploading] = useState(false);
+  const { uploadFile } = useUploadFile();
+  const [uploadFileMutation] = useFileUploadMutation();
+  const [saveTestMutation, saveTestMutationState] = useSaveTestMutation();
+  const [updateTestMutation] = useUpdateTestMutation();
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      //   const response = await uploadFile(file);
+      const response = await uploadFileMutation({ image: file });
+      setCurrentQuestion({
+        ...currentQuestion,
+        imageUrl: response.data?.imageUrl,
+      });
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setCurrentQuestion({ ...currentQuestion, imageUrl: "" });
+  };
 
   const addQuestion = () => {
     if (
@@ -63,6 +143,7 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
         text: "",
         type: "single",
         points: 5,
+        imageUrl: "",
         options: [
           { text: "", isCorrect: false },
           { text: "", isCorrect: false },
@@ -77,6 +158,12 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
+  const editQuestion = (index: number) => {
+    const questionToEdit = questions[index];
+    setCurrentQuestion({ ...questionToEdit });
+    removeQuestion(index);
+  };
+
   const updateOption = (
     optionIndex: number,
     field: "text" | "isCorrect",
@@ -85,7 +172,6 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
     const updatedOptions = currentQuestion.options.map((option, i) => {
       if (i === optionIndex) {
         if (field === "isCorrect" && value === true) {
-          // Only one correct answer allowed
           return { ...option, [field]: value };
         } else if (field === "isCorrect" && value === false) {
           return { ...option, [field]: value };
@@ -93,7 +179,6 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
           return { ...option, [field]: value };
         }
       } else if (field === "isCorrect" && value === true) {
-        // Uncheck other options when one is marked correct
         return { ...option, isCorrect: false };
       }
       return option;
@@ -102,13 +187,20 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
     setCurrentQuestion({ ...currentQuestion, options: updatedOptions });
   };
 
-  const handleSaveTest = () => {
+  const handleSaveTest = async () => {
     const payload = {
       ...testData,
+      startDate: testData.startDate
+        ? new Date(testData.startDate).toISOString()
+        : "",
+      endDate: testData.endDate ? new Date(testData.endDate).toISOString() : "",
       questions: questions,
     };
-    console.log("Test payload:", JSON.stringify(payload, null, 2));
-    // Here you would typically send the payload to your API
+    await saveTestMutation(payload);
+    console.log(
+      `${isEditing ? "Updated" : "Created"} test payload:`,
+      JSON.stringify(payload, null, 2)
+    );
     onClose();
   };
 
@@ -117,7 +209,9 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
       {/* Test Basic Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Test Information</CardTitle>
+          <CardTitle>
+            {isEditing ? "Edit Test Information" : "Test Information"}
+          </CardTitle>
           <CardDescription>Basic details about the test</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -222,6 +316,49 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
           </div>
 
           <div className="space-y-2">
+            <Label>Question Image (Optional)</Label>
+            {currentQuestion.imageUrl ? (
+              <div className="relative inline-block">
+                <img
+                  src={currentQuestion.imageUrl || "/placeholder.svg"}
+                  alt="Question"
+                  className="max-w-xs max-h-48 rounded-lg border"
+                />
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={removeImage}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                <div className="text-center">
+                  <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                  <div className="mt-4">
+                    <Label htmlFor="image-upload" className="cursor-pointer">
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                        <Upload className="h-4 w-4" />
+                        {isUploading ? "Uploading..." : "Click to upload image"}
+                      </div>
+                    </Label>
+                    <Input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={isUploading}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="points">Points</Label>
             <Input
               id="points"
@@ -288,6 +425,13 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => editQuestion(index)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => removeQuestion(index)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -295,6 +439,13 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
                     </div>
                   </div>
                   <p className="text-sm mb-3">{question.text}</p>
+                  {question.imageUrl && (
+                    <img
+                      src={question.imageUrl || "/placeholder.svg"}
+                      alt="Question"
+                      className="max-w-xs max-h-32 rounded border mb-3"
+                    />
+                  )}
                   <div className="space-y-1">
                     {question.options.map((option, optIndex) => (
                       <div
@@ -332,10 +483,14 @@ export function TestCreationForm({ onClose }: TestCreationFormProps) {
         </Button>
         <Button
           onClick={handleSaveTest}
-          disabled={!testData.title || questions.length === 0}
+          disabled={
+            !testData.title ||
+            questions.length === 0 ||
+            saveTestMutationState.isLoading
+          }
         >
           <Save className="h-4 w-4 mr-2" />
-          Save Test
+          {isEditing ? "Update Test" : "Save Test"}
         </Button>
       </div>
     </div>

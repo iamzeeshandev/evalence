@@ -7,11 +7,15 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavMain } from "./nav-main";
-import { SearchForm } from "./search-form";
 import { VersionSwitcher } from "./version-switcher";
 
 const data = {
   versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
+  user: {
+    name: "Abu Bakar",
+    email: "abubakar@example.com",
+    avatar: "/avatars/shadcn.jpg",
+  },
   navMain: [
     {
       title: "Dashboard",
@@ -20,6 +24,10 @@ const data = {
     {
       title: "Test",
       url: "/test",
+    },
+    {
+      title: "Test Assignments",
+      url: "/test-assignment",
     },
     {
       title: "Users",

@@ -14,6 +14,8 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { useSaveAttemptAnswerMutation } from "@/services/rtk-query/attempt-answer/attempt-answer-api";
+import { useAuth } from "@/lib/auth";
 
 interface TestTakingInterfaceProps {
   test: any;
@@ -29,6 +31,10 @@ export function TestTakingInterface({
   const [timeRemaining, setTimeRemaining] = useState(test.duration * 60); // Convert to seconds
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showResults, setShowResults] = useState(false);
+
+  const { user } = useAuth();
+
+  const [saveAttemptAnswer] = useSaveAttemptAnswerMutation();
 
   // Timer effect
   useEffect(() => {
@@ -52,9 +58,18 @@ export function TestTakingInterface({
     setAnswers({ ...answers, [questionIndex]: optionIndex });
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (currentQuestionIndex < test.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      const payload = {
+        attemptId: "string",
+        questionId: test.questions[currentQuestionIndex].id,
+        userId: user?.id,
+        selectedOptionIds: [answers[currentQuestionIndex]],
+        timeSpentIncrementSec: 120000,
+      };
+      debugger;
+      await saveAttemptAnswer(payload);
     }
   };
 
@@ -64,7 +79,7 @@ export function TestTakingInterface({
     }
   };
 
-  const handleSubmitTest = () => {
+  const handleSubmitTest = async () => {
     setIsSubmitted(true);
     setShowResults(true);
     // Here you would typically send answers to your API
@@ -97,6 +112,8 @@ export function TestTakingInterface({
         totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0,
     };
   };
+
+  console.log("Test results:", calculateScore());
 
   if (showResults) {
     const score = calculateScore();
@@ -253,7 +270,13 @@ export function TestTakingInterface({
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-lg">{currentQuestion.text}</p>
-
+          <div className="relative inline-block w-full">
+            <img
+              src={currentQuestion.imageUrl || "/placeholder.svg"}
+              alt="Question"
+              className="max-w-xl max-h-248 rounded-lg border"
+            />
+          </div>
           <RadioGroup
             value={answers[currentQuestionIndex] || ""}
             onValueChange={(value) =>
@@ -266,7 +289,8 @@ export function TestTakingInterface({
                 className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50"
               >
                 <RadioGroupItem
-                  value={index.toString()}
+                  value={option.id}
+                  // value={index.toString()}
                   id={`option-${index}`}
                 />
                 <Label
@@ -282,11 +306,12 @@ export function TestTakingInterface({
       </Card>
 
       {/* Navigation */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-end items-center">
         <Button
           variant="outline"
           onClick={handlePreviousQuestion}
           disabled={currentQuestionIndex === 0}
+          className="hidden"
         >
           Previous
         </Button>

@@ -39,8 +39,20 @@ import {
   Trash2,
 } from "lucide-react";
 import { TestCreationForm } from "./test-creation-form";
+import { useAuth } from "@/lib/auth";
+import {
+  useGetAllCompanyTestsQuery,
+  useGetAllTestsQuery,
+  useGetAllUserTestsQuery,
+} from "@/services/rtk-query";
+import {
+  TestResponse,
+  UserTestResponse,
+} from "@/services/rtk-query/tests/tests-type";
 import { TestTakingInterface } from "./test-taking-interface-view";
+import { useStartTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
 
+// Static test data based on the provided payload structure
 const mockTests = [
   {
     id: "1",
@@ -140,13 +152,50 @@ const mockTests = [
 ];
 
 export function TestDashboard() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedTest, setSelectedTest] = useState<any>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showTestInterface, setShowTestInterface] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
 
-  const filteredTests = mockTests.filter((test) => {
+  const [startTestAttempt, startTestAttemptState] =
+    useStartTestAttemptMutation();
+  const { data: allTestsData, isLoading: isLoadingAll } = useGetAllTestsQuery(
+    undefined,
+    {
+      skip: user?.role !== "super_admin",
+    }
+  );
+  const { data: companyTestsData, isLoading: isLoadingCompany } =
+    useGetAllCompanyTestsQuery(user?.company?.id || "", {
+      skip: user?.role !== "company_admin" || !user?.company.id,
+    });
+  const { data: userTestsData, isLoading: isLoadingUser } =
+    useGetAllUserTestsQuery(user?.id || "", {
+      skip: user?.role !== "employee" || !user?.id,
+    });
+
+  const isLoading =
+    user?.role === "super_admin"
+      ? isLoadingAll
+      : user?.role === "company_admin"
+      ? isLoadingCompany
+      : isLoadingUser;
+
+  let testsData = [];
+  if (user?.role === "super_admin") {
+    testsData = allTestsData || mockTests;
+  } else if (user?.role === "company_admin") {
+    testsData = companyTestsData || mockTests;
+  } else if (user?.role === "employee") {
+    testsData = userTestsData || mockTests;
+  } else {
+    testsData = mockTests;
+  }
+
+  const filteredTests = testsData.filter((test) => {
     const matchesSearch =
       test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       test.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -165,32 +214,60 @@ export function TestDashboard() {
     });
   };
 
+  const getHeaderText = () => {
+    switch (user?.role) {
+      case "super_admin":
+        return {
+          title: "Test Management",
+          description: "Manage and monitor all assessment tests",
+        };
+      case "company_admin":
+        return {
+          title: "Company Tests",
+          description: "Manage tests assigned to your company",
+        };
+      case "employee":
+        return {
+          title: "My Tests",
+          description: "View and take your assigned tests",
+        };
+      default:
+        return {
+          title: "Test Management",
+          description: "Manage and monitor all assessment tests",
+        };
+    }
+  };
+
+  const headerText = getHeaderText();
+  const canCreateTests = user?.role === "super_admin";
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            Test Management
+            {headerText.title}
           </h1>
-          <p className="text-muted-foreground">
-            Manage and monitor all assessment tests
-          </p>
+          <p className="text-muted-foreground">{headerText.description}</p>
         </div>
-        <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Create New Test
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Test</DialogTitle>
-            </DialogHeader>
-            <TestCreationForm onClose={() => setShowCreateForm(false)} />
-          </DialogContent>
-        </Dialog>
+        {canCreateTests && (
+          <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create New Test
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create New Test</DialogTitle>
+              </DialogHeader>
+              <TestCreationForm onClose={() => setShowCreateForm(false)} />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Filters and Search */}
@@ -228,9 +305,11 @@ export function TestDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Tests
+                  {user?.role === "employee" ? "Assigned Tests" : "Total Tests"}
                 </p>
-                <p className="text-2xl font-bold">{mockTests.length}</p>
+                <p className="text-2xl font-bold">
+                  {isLoading ? "..." : testsData.length}
+                </p>
               </div>
               <BookOpen className="h-8 w-8 text-primary" />
             </div>
@@ -244,7 +323,9 @@ export function TestDashboard() {
                   Active Tests
                 </p>
                 <p className="text-2xl font-bold">
-                  {mockTests.filter((t) => t.isActive).length}
+                  {isLoading
+                    ? "..."
+                    : testsData.filter((t) => t.isActive).length}
                 </p>
               </div>
               <Play className="h-8 w-8 text-accent" />
@@ -259,11 +340,14 @@ export function TestDashboard() {
                   Total Companies
                 </p>
                 <p className="text-2xl font-bold">
-                  {mockTests.reduce(
+                  {testsData.reduce((acc, test) => acc + 1, 0)}
+                </p>
+                {/* <p className="text-2xl font-bold">
+                  {testsData.reduce(
                     (acc, test) => acc + test.assignedCompanies,
                     0
                   )}
-                </p>
+                </p> */}
               </div>
               <Users className="h-8 w-8 text-secondary" />
             </div>
@@ -277,11 +361,14 @@ export function TestDashboard() {
                   Total Attempts
                 </p>
                 <p className="text-2xl font-bold">
-                  {mockTests.reduce(
+                  {testsData.reduce((acc, test) => acc + 1, 0)}
+                </p>
+                {/* <p className="text-2xl font-bold">
+                  {testsData.reduce(
                     (acc, test) => acc + test.completedAttempts,
                     0
                   )}
-                </p>
+                </p> */}
               </div>
               <Calendar className="h-8 w-8 text-chart-2" />
             </div>
@@ -297,88 +384,147 @@ export function TestDashboard() {
         </TabsList>
 
         <TabsContent value="grid" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTests.map((test) => (
-              <Card key={test.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg">{test.title}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={test.isActive ? "default" : "secondary"}
-                        >
-                          {test.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {test.duration} min
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-muted rounded"></div>
+                      <div className="h-3 bg-muted rounded w-2/3"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredTests.map((test) => (
+                <Card
+                  key={test.id}
+                  className="hover:shadow-lg transition-shadow"
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <CardTitle className="text-lg">{test.title}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={test.isActive ? "default" : "secondary"}
+                          >
+                            {test.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {test.duration} min
+                          </div>
+                          {user?.role === "employee" && (
+                            <Badge variant="outline">
+                              Due: {formatDate("2025-12-31")}
+                            </Badge>
+                          )}
                         </div>
                       </div>
+                      {canCreateTests && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTest(test);
+                              setShowEditForm(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex gap-1">
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="mb-4 line-clamp-2">
+                      {test.description}
+                    </CardDescription>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Questions:
+                        </span>
+                        <span className="font-medium">
+                          {test.questions?.length || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Total Points:
+                        </span>
+                        <span className="font-medium">
+                          {test.questions?.reduce(
+                            (acc, q) => acc + q.points,
+                            0
+                          ) || 0}
+                        </span>
+                      </div>
+                      {user?.role === "employee" && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Max Attempts:
+                            </span>
+                            <span className="font-medium">10</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Status:
+                            </span>
+                            <span className="font-medium">
+                              {new Date("2025-12-31") < new Date()
+                                ? "Expired"
+                                : "Active"}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-2">
+                        <span>Start: {formatDate(test.startDate)}</span>
+                        <span>End: {formatDate(test.endDate)}</span>
+                      </div>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedTest(test)}
+                        className="w-full"
+                        variant={test.isActive ? "default" : "secondary"}
+                        onClick={() => {
+                          setSelectedTest(test);
+                          setShowTestInterface(true);
+                        }}
+                        disabled={
+                          !test.isActive ||
+                          (test.questions?.length || 0) === 0 ||
+                          (user?.role === "employee" &&
+                            new Date("2025-12-31") < new Date())
+                        }
                       >
-                        <Edit className="h-4 w-4" />
+                        {(test.questions?.length || 0) === 0
+                          ? "No Questions"
+                          : user?.role === "employee" &&
+                            new Date("2025-12-31") < new Date()
+                          ? "Expired"
+                          : "Take Test"}
                       </Button>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="mb-4 line-clamp-2">
-                    {test.description}
-                  </CardDescription>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Questions:</span>
-                      <span className="font-medium">{test.totalQuestions}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Total Points:
-                      </span>
-                      <span className="font-medium">{test.totalPoints}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Companies:</span>
-                      <span className="font-medium">
-                        {test.assignedCompanies}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Attempts:</span>
-                      <span className="font-medium">
-                        {test.completedAttempts}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                      <span>Start: {formatDate(test.startDate)}</span>
-                      <span>End: {formatDate(test.endDate)}</span>
-                    </div>
-                    <Button
-                      className="w-full"
-                      variant={test.isActive ? "default" : "secondary"}
-                      onClick={() => {
-                        setSelectedTest(test);
-                        setShowTestInterface(true);
-                      }}
-                      disabled={!test.isActive || test.totalQuestions === 0}
-                    >
-                      {test.totalQuestions === 0 ? "No Questions" : "Take Test"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="list" className="space-y-4">
@@ -421,9 +567,9 @@ export function TestDashboard() {
                             {test.duration} min
                           </div>
                         </td>
-                        <td className="p-4">{test.totalQuestions}</td>
-                        <td className="p-4">{test.assignedCompanies}</td>
-                        <td className="p-4">{test.completedAttempts}</td>
+                        <td className="p-4">{test.questions?.length || 0}</td>
+                        <td className="p-4">10</td>
+                        <td className="p-4">10</td>
                         <td className="p-4">
                           <div className="flex gap-2">
                             <Button
@@ -434,18 +580,31 @@ export function TestDashboard() {
                                 setShowTestInterface(true);
                               }}
                               disabled={
-                                !test.isActive || test.totalQuestions === 0
+                                !test.isActive ||
+                                (test.questions?.length || 0) === 0 ||
+                                (user?.role === "employee" &&
+                                  new Date("2025-12-31") < new Date())
                               }
                             >
-                              Take Test
+                              {(test.questions?.length || 0) === 0
+                                ? "No Questions"
+                                : user?.role === "employee" &&
+                                  new Date("2025-12-31") < new Date()
+                                ? "Expired"
+                                : "Take Test"}
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedTest(test)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            {canCreateTests && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTest(test);
+                                  setShowEditForm(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -458,9 +617,27 @@ export function TestDashboard() {
         </TabsContent>
       </Tabs>
 
+      {/* Edit Test Dialog */}
+      {canCreateTests && (
+        <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+          <DialogContent className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Test: {selectedTest?.title}</DialogTitle>
+            </DialogHeader>
+            {selectedTest && (
+              <TestCreationForm
+                testData={selectedTest}
+                isEditing={true}
+                onClose={() => setShowEditForm(false)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Test Taking Interface Dialog */}
       <Dialog open={showTestInterface} onOpenChange={setShowTestInterface}>
-        <DialogContent className="max-w-4xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Taking Test: {selectedTest?.title}</DialogTitle>
           </DialogHeader>

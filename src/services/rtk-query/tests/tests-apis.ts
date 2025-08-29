@@ -1,4 +1,5 @@
-import { appApi } from "..";
+import { appApi } from "@/services/rtk-base-api-service";
+import { TestPayload, TestResponse, UserTestResponse } from "./tests-type";
 
 const testsApi = appApi
   .enhanceEndpoints({
@@ -6,7 +7,35 @@ const testsApi = appApi
   })
   .injectEndpoints({
     endpoints: (build) => ({
-      saveTest: build.mutation<unknown, any>({
+      getTestById: build.query<TestResponse, string>({
+        query: (id) => ({
+          url: `/tests/${id}`,
+          method: "GET",
+        }),
+        providesTags: (result, error, id) => [{ type: "Tests", id }],
+      }),
+      getAllTests: build.query<TestResponse[], void>({
+        query: () => ({
+          url: `/tests`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "Tests", id: "tests-list" }],
+      }),
+      getAllCompanyTests: build.query<TestResponse[], string | undefined>({
+        query: (companyId) => ({
+          url: `/tests/company/${companyId}`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "Tests", id: "tests-list" }],
+      }),
+      getAllUserTests: build.query<TestResponse[], string | undefined>({
+        query: (userId) => ({
+          url: `/tests/user/${userId}`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "Tests", id: "tests-list" }],
+      }),
+      saveTest: build.mutation<TestResponse, TestPayload>({
         query: (payload) => ({
           url: `/tests`,
           method: "POST",
@@ -14,24 +43,10 @@ const testsApi = appApi
         }),
         invalidatesTags: [{ type: "Tests", id: "tests-list" }],
       }),
-
-      allTests: build.query<unknown, void>({
-        query: () => ({
-          url: `/tests`,
-          method: "GET",
-        }),
-        providesTags: [{ type: "Tests", id: "tests-list" }],
-      }),
-
-      testById: build.query<unknown, string>({
-        query: (id) => ({
-          url: `/tests/${id}`,
-          method: "GET",
-        }),
-        providesTags: (result, error, id) => [{ type: "Tests", id }],
-      }),
-
-      updateTest: build.mutation<unknown, { id: string; payload: any }>({
+      updateTest: build.mutation<
+        TestResponse,
+        { id: string; payload: TestPayload }
+      >({
         query: ({ id, payload }) => ({
           url: `/tests/${id}`,
           method: "PUT",
@@ -42,8 +57,7 @@ const testsApi = appApi
           { type: "Tests", id: "tests-list" },
         ],
       }),
-
-      deleteTest: build.mutation<unknown, string>({
+      deleteTest: build.mutation<{ id: string }, string>({
         query: (id) => ({
           url: `/tests/${id}`,
           method: "DELETE",
@@ -53,4 +67,12 @@ const testsApi = appApi
     }),
   });
 
-export const {} = testsApi;
+export const {
+  useGetTestByIdQuery,
+  useGetAllTestsQuery,
+  useGetAllCompanyTestsQuery,
+  useGetAllUserTestsQuery,
+  useSaveTestMutation,
+  useUpdateTestMutation,
+  useDeleteTestMutation,
+} = testsApi;

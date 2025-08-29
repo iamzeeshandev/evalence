@@ -1,4 +1,5 @@
-import { appApi } from "..";
+import { appApi } from "@/services/rtk-base-api-service";
+import { User } from "./users-type";
 
 const userApi = appApi
   .enhanceEndpoints({
@@ -6,15 +7,21 @@ const userApi = appApi
   })
   .injectEndpoints({
     endpoints: (build) => ({
-      userById: build.query<unknown, string | undefined>({
-        providesTags: [{ type: "User", id: "user" }],
-        query: (id) => ({
+      getAllUsers: build.query<User[], void>({
+        providesTags: [{ type: "User", id: "all-users" }],
+        query: () => ({
           url: `/users`,
           method: "GET",
         }),
       }),
-
-      saveUser: build.mutation<unknown, any>({
+      userById: build.query<User, string | undefined>({
+        providesTags: [{ type: "User", id: "user" }],
+        query: (id) => ({
+          url: `/users/${id}`,
+          method: "GET",
+        }),
+      }),
+      saveUser: build.mutation<User, any>({
         query: (payload) => ({
           url: `/users`,
           method: "POST",
@@ -22,7 +29,14 @@ const userApi = appApi
         }),
         invalidatesTags: [{ type: "User", id: "save-user" }],
       }),
+      loginUser: build.mutation<User, { email: string; password: string }>({
+        query: (payload) => ({
+          url: `/users/login`,
+          method: "POST",
+          body: payload,
+        }),
+      }),
     }),
   });
 
-export const {} = userApi;
+export const { useGetAllUsersQuery, useLoginUserMutation } = userApi;

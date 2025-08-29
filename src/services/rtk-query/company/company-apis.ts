@@ -1,4 +1,5 @@
-import { appApi } from "..";
+import { appApi } from "@/services/rtk-base-api-service";
+import { Company, CompanyPayload } from "./company-type";
 
 const companyApi = appApi
   .enhanceEndpoints({
@@ -6,7 +7,14 @@ const companyApi = appApi
   })
   .injectEndpoints({
     endpoints: (build) => ({
-      companyById: build.query<unknown, string | undefined>({
+      getAllCompanies: build.query<Company[], void>({
+        providesTags: [{ type: "Company", id: "all-companies" }],
+        query: () => ({
+          url: `/companies`,
+          method: "GET",
+        }),
+      }),
+      companyById: build.query<Company, string | undefined>({
         providesTags: [{ type: "Company", id: "company" }],
         query: (id) => ({
           url: `/companies/${id}`,
@@ -14,7 +22,7 @@ const companyApi = appApi
         }),
       }),
 
-      saveCompany: build.mutation<unknown, any>({
+      saveCompany: build.mutation<CompanyPayload, any>({
         query: (payload) => ({
           url: `/companies`,
           method: "POST",
@@ -22,7 +30,30 @@ const companyApi = appApi
         }),
         invalidatesTags: [{ type: "Company", id: "save-company" }],
       }),
+      updateCompany: build.mutation<
+        CompanyPayload,
+        { id: string; data: CompanyPayload }
+      >({
+        query: ({ id, data }) => ({
+          url: `/companies/${id}`,
+          method: "PUT",
+          body: data,
+        }),
+        invalidatesTags: [{ type: "Company", id: "update-company" }],
+      }),
+      deleteCompany: build.mutation<{ id: string }, string>({
+        query: (id) => ({
+          url: `/companies/${id}`,
+          method: "DELETE",
+        }),
+        invalidatesTags: [{ type: "Company", id: "delete-company" }],
+      }),
     }),
   });
 
-export const {} = companyApi;
+export const {
+  useGetAllCompaniesQuery,
+  useSaveCompanyMutation,
+  useUpdateCompanyMutation,
+  useDeleteCompanyMutation,
+} = companyApi;

@@ -1,4 +1,4 @@
-import { appApi } from "..";
+import { appApi } from "@/services/rtk-base-api-service";
 
 const questionsApi = appApi
   .enhanceEndpoints({
