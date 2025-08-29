@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLazyGetUserTestAttemptListByIdQuery } from "@/services/rtk-query/test-attempt/test-attempt-api";
 import { TestAttemptResponse } from "@/services/rtk-query/test-attempt/test-attempt-type";
 import {
   Calendar,
@@ -25,7 +26,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const mockUsers: any[] = [
   {
@@ -203,30 +204,38 @@ const mockTestAttempts: TestAttemptResponse[] = [
 interface TestResultsPageProps {
   // Props for API integration
   users?: any[];
-  testAttempts?: TestAttemptResponse[];
-  onUserSelect?: (userId: string) => void;
+ 
   loading?: boolean;
 }
 
 export function TestResultsPage({
   users = mockUsers,
-  testAttempts = mockTestAttempts,
-  onUserSelect,
+
   loading = false,
 }: TestResultsPageProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [testAttempts, setTestAttempts] = useState<TestAttemptResponse[]>();
   const [selectedAttempt, setSelectedAttempt] =
     useState<TestAttemptResponse | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleUserSelect = (userId: string) => {
+  const [
+    fetchUserTestAttemptsList,
+    {
+      data: userTestAttempts,
+      isLoading: isUserTestAttemptsLoading,
+      isFetching: isUserTestAttemptsFetching,
+    },
+  ] = useLazyGetUserTestAttemptListByIdQuery();
+
+  const handleUserSelect = (userId: any) => {
     setSelectedUserId(userId);
-    onUserSelect?.(userId);
+    fetchUserTestAttemptsList(userId);
   };
 
-  const filteredAttempts = selectedUserId
-    ? testAttempts.filter((attempt) => attempt.userId === selectedUserId)
-    : [];
+  useEffect(() => {
+    if (userTestAttempts) setTestAttempts(userTestAttempts);
+  }, [userTestAttempts]);
 
   const selectedUser = users.find((user) => user.id === selectedUserId);
 
@@ -325,13 +334,13 @@ export function TestResultsPage({
                   </div>
                 ))}
               </div>
-            ) : filteredAttempts.length === 0 ? (
+            ) : testAttempts?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No test attempts found for this user.
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredAttempts.map((attempt) => (
+                {(testAttempts || [])?.map((attempt) => (
                   <div
                     key={attempt.id}
                     className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer"

@@ -88,7 +88,7 @@ export function TestTakingInterface({
     // Here you would typically send answers to your API
     const payload = {
       attemptId: attemptId,
-      finalTimeSpentSec: 1,
+      finalTimeSpentSec: timeRemaining || 1,
     };
     saveTestAttempt(payload);
     console.log("Test submitted with answers:", answers);

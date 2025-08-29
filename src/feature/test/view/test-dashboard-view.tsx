@@ -188,21 +188,19 @@ export function TestDashboard() {
   };
 
   const handleStartTest = async () => {
-    if (
-      !selectedTest
-      //  || !user
-    ) {
+    if (!selectedTest || !user) {
       return;
     }
     try {
       await testAttemptMut({
         testId: selectedTest?.id,
         userId: user?.id || "000",
+      }).then(() => {
+        sessionStorage.setItem(
+          "currentTestAttempt",
+          `${testAttemptMutState?.data?.id}`
+        );
       });
-      sessionStorage.setItem(
-        "currentTestAttempt",
-        `${testAttemptMutState?.data?.id}`
-      );
       setShowTestInterface(true);
     } catch (error) {
       console.error("Failed to start test attempt:", error);

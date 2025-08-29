@@ -46,11 +46,22 @@ const testAttemptsApi = appApi
         }),
         providesTags: (result, error, id) => [{ type: "TestAttempts", id }],
       }),
+
+      getUserTestAttemptListById: build.query<TestAttemptResponse[], string>({
+        query: (id) => ({
+          url: `/test-attempts/user-list/${id}`,
+          method: "GET",
+        }),
+        providesTags: (result, error, id) => [
+          { type: "TestAttempts", id: `list-${id}` },
+        ],
+      }),
     }),
   });
 
 export const {
   useStartTestAttemptMutation,
   useSubmitTestAttemptMutation,
+  useLazyGetUserTestAttemptListByIdQuery,
   useGetTestAttemptByIdQuery,
 } = testAttemptsApi;

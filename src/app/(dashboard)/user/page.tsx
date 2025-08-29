@@ -1,7 +1,19 @@
-import { TestResultsPage } from "@/feature/user/user-view";
+"use client";
 
-export const metadata = { title: `Users` };
+import { TestResultsPage } from "@/feature/user/user-view";
+import { useGetAllUsersDropdownQuery } from "@/services/rtk-query";
 
 export default function Page() {
-  return <TestResultsPage />;
+  const {
+    data: employees,
+    isLoading: isEmployeeLoading,
+    isFetching: isEmployeeFetching,
+  } = useGetAllUsersDropdownQuery();
+
+  return (
+    <TestResultsPage
+      users={employees}
+      loading={isEmployeeLoading || isEmployeeFetching}
+    />
+  );
 }
