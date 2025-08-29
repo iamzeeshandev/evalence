@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,7 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -19,38 +25,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/lib/auth";
+import { useGetAllTestsQuery } from "@/services/rtk-query";
+import { useStartTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Plus,
-  Search,
-  Filter,
-  Clock,
-  Users,
   BookOpen,
   Calendar,
-  Play,
+  Clock,
   Edit,
+  Filter,
+  Play,
+  Plus,
+  Search,
   Trash2,
 } from "lucide-react";
+import { useState } from "react";
 import { TestCreationForm } from "./test-creation-form";
-import { useAuth } from "@/lib/auth";
-import {
-  useGetAllCompanyTestsQuery,
-  useGetAllTestsQuery,
-  useGetAllUserTestsQuery,
-} from "@/services/rtk-query";
-import {
-  TestResponse,
-  UserTestResponse,
-} from "@/services/rtk-query/tests/tests-type";
 import { TestTakingInterface } from "./test-taking-interface-view";
-import { useStartTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
 
 const mockTests = [
   {
@@ -191,18 +182,26 @@ export function TestDashboard() {
 
   const getHeaderText = () => {
     return {
-      title: "Test Management",
+      title: "Performance Assessment",
       description: "Manage and monitor all assessment tests",
     };
   };
 
   const handleStartTest = async () => {
-    if (!selectedTest || !user) return;
+    if (
+      !selectedTest
+      //  || !user
+    ) {
+      return;
+    }
     try {
-      await testAttemptMut({ testId: selectedTest.id, userId: user.id });
+      await testAttemptMut({
+        testId: selectedTest?.id,
+        userId: user?.id || "000",
+      });
       sessionStorage.setItem(
         "currentTestAttempt",
-        JSON.stringify(testAttemptMutState.data)
+        `${testAttemptMutState?.data?.id}`
       );
       setShowTestInterface(true);
     } catch (error) {
@@ -223,22 +222,22 @@ export function TestDashboard() {
           </h1>
           <p className="text-muted-foreground">{headerText.description}</p>
         </div>
-        {canCreateTests && (
+        {
           <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Create New Test
+                Create New Assessment
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create New Test</DialogTitle>
+                <DialogTitle>Create New Assessment</DialogTitle>
               </DialogHeader>
               <TestCreationForm onClose={() => setShowCreateForm(false)} />
             </DialogContent>
           </Dialog>
-        )}
+        }
       </div>
 
       {/* Filters and Search */}
@@ -248,7 +247,7 @@ export function TestDashboard() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search tests by title or description..."
+                placeholder="Search assessment by title or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -260,9 +259,9 @@ export function TestDashboard() {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Tests</SelectItem>
-                <SelectItem value="active">Active Tests</SelectItem>
-                <SelectItem value="inactive">Inactive Tests</SelectItem>
+                <SelectItem value="all">All Assessments</SelectItem>
+                <SelectItem value="active">Active Assessments</SelectItem>
+                <SelectItem value="inactive">Inactive Assessments</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -270,13 +269,15 @@ export function TestDashboard() {
       </Card>
 
       {/* Test Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  {user?.role === "employee" ? "Assigned Tests" : "Total Tests"}
+                  {user?.role === "employee"
+                    ? "Assigned Tests"
+                    : "Total Evaluation"}
                 </p>
                 <p className="text-2xl font-bold">
                   {isLoading ? "..." : testsData.length}
@@ -291,7 +292,7 @@ export function TestDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Active Tests
+                  Active Evaluations
                 </p>
                 <p className="text-2xl font-bold">
                   {isLoading
@@ -303,33 +304,13 @@ export function TestDashboard() {
             </div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Companies
-                </p>
-                <p className="text-2xl font-bold">
-                  {testsData.reduce((acc, test) => acc + 1, 0)}
-                </p>
-                {/* <p className="text-2xl font-bold">
-                  {testsData.reduce(
-                    (acc, test) => acc + test.assignedCompanies,
-                    0
-                  )}
-                </p> */}
-              </div>
-              <Users className="h-8 w-8 text-secondary" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Attempts
+                  Completed Assessments
                 </p>
                 <p className="text-2xl font-bold">
                   {testsData.reduce((acc, test) => acc + 1, 0)}
@@ -465,7 +446,7 @@ export function TestDashboard() {
                       >
                         {(test.questions?.length || 0) === 0
                           ? "No Questions"
-                          : "Take Test"}
+                          : "Take Assessment"}
                       </Button>
                     </div>
                   </CardContent>
@@ -482,7 +463,7 @@ export function TestDashboard() {
                 <table className="w-full">
                   <thead className="border-b">
                     <tr className="text-left">
-                      <th className="p-4 font-medium">Test Name</th>
+                      <th className="p-4 font-medium">Assessment Name</th>
                       <th className="p-4 font-medium">Status</th>
                       <th className="p-4 font-medium">Duration</th>
                       <th className="p-4 font-medium">Questions</th>
@@ -539,7 +520,7 @@ export function TestDashboard() {
                                 : user?.role === "employee" &&
                                   new Date("2025-12-31") < new Date()
                                 ? "Expired"
-                                : "Take Test"}
+                                : "Take Assessment"}
                             </Button>
                             {canCreateTests && (
                               <Button
@@ -585,7 +566,11 @@ export function TestDashboard() {
 
       {/* Test Taking Interface Dialog */}
       <Dialog open={showTestInterface} onOpenChange={setShowTestInterface}>
-        <DialogContent className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()} // prevents closing on outside click
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto"
+        >
           <DialogHeader>
             <DialogTitle>Taking Test: {selectedTest?.title}</DialogTitle>
           </DialogHeader>

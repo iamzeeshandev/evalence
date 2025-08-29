@@ -15,7 +15,7 @@ const attemptAnswerApi = appApi
         AttemptAnswerPayload
       >({
         query: (payload) => ({
-          url: `/attempt-answer/save`,
+          url: `/attempt-answers/save`,
           method: "POST",
           body: payload,
         }),

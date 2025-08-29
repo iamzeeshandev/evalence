@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -16,16 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TestAttemptResponse } from "@/services/rtk-query/test-attempt/test-attempt-type";
 import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  User,
   Calendar,
+  CheckCircle,
+  Clock,
   Target,
   Trophy,
+  User,
+  XCircle,
 } from "lucide-react";
-import { TestAttemptResponse } from "@/services/rtk-query/test-attempt/test-attempt-type";
+import { useState } from "react";
 
 const mockUsers: any[] = [
   {
@@ -269,9 +269,11 @@ export function TestResultsPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-balance">Test Results</h1>
+          <h1 className="text-3xl font-bold text-balance">
+            Assessment Results
+          </h1>
           <p className="text-muted-foreground">
-            View and analyze test attempt results
+            View and analyze assessment results
           </p>
         </div>
       </div>
@@ -311,7 +313,7 @@ export function TestResultsPage({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5" />
-              Test Attempts for {selectedUser?.name}
+              Assessments for {selectedUser?.name}
             </CardTitle>
           </CardHeader>
           <CardContent>

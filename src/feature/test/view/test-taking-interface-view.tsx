@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,13 +9,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Clock, CheckCircle, AlertCircle } from "lucide-react";
-import { useSaveAttemptAnswerMutation } from "@/services/rtk-query/attempt-answer/attempt-answer-api";
 import { useAuth } from "@/lib/auth";
+import { useSaveAttemptAnswerMutation } from "@/services/rtk-query/attempt-answer/attempt-answer-api";
+import { useSubmitTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
+import { AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface TestTakingInterfaceProps {
   test: any;
@@ -33,6 +34,8 @@ export function TestTakingInterface({
   const [showResults, setShowResults] = useState(false);
 
   const { user } = useAuth();
+
+  const [saveTestAttempt] = useSubmitTestAttemptMutation();
 
   const [saveAttemptAnswer] = useSaveAttemptAnswerMutation();
   const attemptId = sessionStorage.getItem("currentTestAttempt") || "";
@@ -83,6 +86,11 @@ export function TestTakingInterface({
     setIsSubmitted(true);
     setShowResults(true);
     // Here you would typically send answers to your API
+    const payload = {
+      attemptId: attemptId,
+      finalTimeSpentSec: 1,
+    };
+    saveTestAttempt(payload);
     console.log("Test submitted with answers:", answers);
   };
 
@@ -214,7 +222,7 @@ export function TestTakingInterface({
             </div>
 
             <Button onClick={onClose} className="w-full">
-              Close Test
+              Close Assessment
             </Button>
           </CardContent>
         </Card>
@@ -283,24 +291,28 @@ export function TestTakingInterface({
               handleAnswerChange(currentQuestionIndex, value)
             }
           >
-            {currentQuestion.options.map((option: any, index: number) => (
-              <div
-                key={index}
-                className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50"
-              >
-                <RadioGroupItem
-                  value={option.id}
-                  // value={index.toString()}
-                  id={`option-${index}`}
-                />
-                <Label
-                  htmlFor={`option-${index}`}
-                  className="flex-1 cursor-pointer"
-                >
-                  {option.text}
-                </Label>
-              </div>
-            ))}
+            {[...currentQuestion.options]
+              ?.sort((a, b) => a.text.localeCompare(b.text))
+              .map((option: any, index: number) => {
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50"
+                  >
+                    <RadioGroupItem
+                      value={option.id}
+                      // value={index.toString()}
+                      id={`option-${index}`}
+                    />
+                    <Label
+                      htmlFor={`option-${index}`}
+                      className="flex-1 cursor-pointer"
+                    >
+                      {option.text}
+                    </Label>
+                  </div>
+                );
+              })}
           </RadioGroup>
         </CardContent>
       </Card>
@@ -322,7 +334,7 @@ export function TestTakingInterface({
               onClick={handleSubmitTest}
               className="bg-green-600 hover:bg-green-700"
             >
-              Submit Test
+              Submit Assessment
             </Button>
           ) : (
             <Button onClick={handleNextQuestion}>Next</Button>

@@ -18,38 +18,16 @@ const data = {
   },
   navMain: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-    },
-    {
-      title: "Test",
+      title: "Evaluation Form",
       url: "/test",
     },
     {
-      title: "Test Assignments",
+      title: "Evaluation Form Assignment",
       url: "/test-assignment",
     },
     {
       title: "Users",
       url: "/user",
-    },
-    {
-      title: "Company",
-      url: "/company",
-    },
-    {
-      title: "Nested",
-      url: "/nested",
-      items: [
-        {
-          title: "Sub Item 1",
-          url: "/nested/sub-item-1",
-        },
-        {
-          title: "Sub Item 2",
-          url: "/nested/sub-item-2",
-        },
-      ],
     },
   ],
 };

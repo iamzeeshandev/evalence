@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react";
+import * as React from "react";
 
 import {
   DropdownMenu,
@@ -37,7 +37,7 @@ export function VersionSwitcher({
                 <GalleryVerticalEnd className="size-4" />
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-medium">Evalence</span>
+                <span className="font-medium">HR Integrated</span>
                 <span className="">v{selectedVersion}</span>
               </div>
               <ChevronsUpDown className="ml-auto" />

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useAuth } from "@/lib/auth";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -9,17 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -27,23 +17,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  CalendarIcon,
-  Plus,
-  Search,
-  Users,
-  Building,
-  Clock,
-  Filter,
-} from "lucide-react";
-import { format } from "date-fns";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import {
+  useGetAllCompaniesQuery,
+  useGetAllTestsQuery,
+  useGetAllUsersQuery,
+} from "@/services/rtk-query";
 import {
   useAssignToCompanyMutation,
   useAssignToUserMutation,
@@ -52,14 +46,20 @@ import {
   useGetUserTestAssignmentByCompanyIdQuery,
 } from "@/services/rtk-query/test-assignment/test-assignment-api";
 import {
-  useGetAllCompaniesQuery,
-  useGetAllTestsQuery,
-  useGetAllUsersQuery,
-} from "@/services/rtk-query";
-import {
   AssignToUserPayload,
   TestAssignmentPayload,
 } from "@/services/rtk-query/test-assignment/test-assignment-type";
+import { format } from "date-fns";
+import {
+  Building,
+  CalendarIcon,
+  Clock,
+  Filter,
+  Plus,
+  Search,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
 
 export function TestAssignmentSystem() {
   const { user } = useAuth();
@@ -309,15 +309,11 @@ export function TestAssignmentSystem() {
                         <SelectValue placeholder="Choose a user" />
                       </SelectTrigger>
                       <SelectContent>
-                        {users
-                          ?.filter(
-                            (u) => u.companyId === selectedCompanyForAssign
-                          )
-                          .map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name} ({user.email})
-                            </SelectItem>
-                          ))}
+                        {(users || []).map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.firstName} ({user.email})
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

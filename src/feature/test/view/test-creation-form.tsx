@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,15 +13,15 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Save, Upload, X, ImageIcon, Edit } from "lucide-react";
-import { useFileUploadMutation } from "@/services/rtk-query/file/file-api";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useSaveTestMutation,
   useUpdateTestMutation,
 } from "@/services/rtk-query";
+import { useFileUploadMutation } from "@/services/rtk-query/file/file-api";
+import { Edit, ImageIcon, Plus, Save, Trash2, Upload, X } from "lucide-react";
+import { useState } from "react";
 
 interface Question {
   text: string;
@@ -133,26 +133,24 @@ export function TestCreationForm({
     setCurrentQuestion({ ...currentQuestion, imageUrl: "" });
   };
 
-  const addQuestion = () => {
-    if (
-      currentQuestion.text &&
-      currentQuestion.options.some((opt) => opt.text)
-    ) {
-      setQuestions([...questions, { ...currentQuestion }]);
-      setCurrentQuestion({
-        text: "",
-        type: "single",
-        points: 5,
-        imageUrl: "",
-        options: [
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-        ],
-      });
-    }
-  };
+const addQuestion = () => {
+  if (
+    currentQuestion.text &&
+    currentQuestion.options.some((opt) => opt.text)
+  ) {
+    // Save the current question
+    setQuestions([...questions, { ...currentQuestion }]);
+
+    // Reset state for a fresh question
+    setCurrentQuestion({
+      text: "",
+      type: "single",
+      points: 5,
+      imageUrl: "",
+      options: Array.from({ length: 4 }, () => ({ text: "", isCorrect: false })), // start with 4 defaults
+    });
+  }
+};
 
   const removeQuestion = (index: number) => {
     setQuestions(questions.filter((_, i) => i !== index));
@@ -162,6 +160,14 @@ export function TestCreationForm({
     const questionToEdit = questions[index];
     setCurrentQuestion({ ...questionToEdit });
     removeQuestion(index);
+  };
+
+  const addOption = () => {
+    const newOption = { text: "", isCorrect: false };
+    setCurrentQuestion({
+      ...currentQuestion,
+      options: [...currentQuestion.options, newOption],
+    });
   };
 
   const updateOption = (
@@ -210,21 +216,23 @@ export function TestCreationForm({
       <Card>
         <CardHeader>
           <CardTitle>
-            {isEditing ? "Edit Test Information" : "Test Information"}
+            {isEditing
+              ? "Edit Assessment Information"
+              : "Assessment Information"}
           </CardTitle>
-          <CardDescription>Basic details about the test</CardDescription>
+          <CardDescription>Basic details about the assessment</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Test Title</Label>
+              <Label htmlFor="title">Assessment Title</Label>
               <Input
                 id="title"
                 value={testData.title}
                 onChange={(e) =>
                   setTestData({ ...testData, title: e.target.value })
                 }
-                placeholder="Enter test title"
+                placeholder="Enter Assessment title"
               />
             </div>
             <div className="space-y-2">
@@ -252,7 +260,7 @@ export function TestCreationForm({
               onChange={(e) =>
                 setTestData({ ...testData, description: e.target.value })
               }
-              placeholder="Enter test description"
+              placeholder="Enter assessment description"
               rows={3}
             />
           </div>
@@ -290,7 +298,7 @@ export function TestCreationForm({
                 setTestData({ ...testData, isActive: checked })
               }
             />
-            <Label htmlFor="isActive">Active Test</Label>
+            <Label htmlFor="isActive">Active Assessment</Label>
           </div>
         </CardContent>
       </Card>
@@ -374,32 +382,37 @@ export function TestCreationForm({
             />
           </div>
 
-          <div className="space-y-3">
-            <Label>Answer Options</Label>
-            {currentQuestion.options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <Input
-                  value={option.text}
-                  onChange={(e) => updateOption(index, "text", e.target.value)}
-                  placeholder={`Option ${index + 1}`}
-                  className="flex-1"
+          <Label>Answer Options</Label>
+          {currentQuestion.options.map((option, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <Input
+                value={option.text}
+                onChange={(e) => updateOption(index, "text", e.target.value)}
+                placeholder={`Option ${index + 1}`}
+                className="flex-1"
+              />
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="correctAnswer"
+                  checked={option.isCorrect}
+                  onChange={(e) =>
+                    updateOption(index, "isCorrect", e.target.checked)
+                  }
+                  className="w-4 h-4"
                 />
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="correctAnswer"
-                    checked={option.isCorrect}
-                    onChange={(e) =>
-                      updateOption(index, "isCorrect", e.target.checked)
-                    }
-                    className="w-4 h-4"
-                  />
-                  <Label className="text-sm">Correct</Label>
-                </div>
+                <Label className="text-sm">Correct</Label>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
 
+          {/* Add Option Button */}
+          <Button onClick={addOption} variant="outline" className="w-full mb-2">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Option
+          </Button>
+
+          {/* Add Question Button */}
           <Button onClick={addQuestion} className="w-full">
             <Plus className="h-4 w-4 mr-2" />
             Add Question
@@ -490,7 +503,7 @@ export function TestCreationForm({
           }
         >
           <Save className="h-4 w-4 mr-2" />
-          {isEditing ? "Update Test" : "Save Test"}
+          {isEditing ? "Update Assessment" : "Save Assessment"}
         </Button>
       </div>
     </div>
