@@ -1,3 +1,6 @@
+import { AttemptAnswerResponse } from "../attempt-answer/attempt-answer-type";
+import { TestResponse } from "../tests/tests-type";
+
 export interface StartTestAttemptPayload {
   testId: string;
   userId: string;
@@ -26,4 +29,6 @@ export interface TestAttemptResponse {
   submittedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  test: TestResponse
+  attemptAnswers: AttemptAnswerResponse[]
 }

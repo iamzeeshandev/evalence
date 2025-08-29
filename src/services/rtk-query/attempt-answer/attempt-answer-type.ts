@@ -11,4 +11,6 @@ export interface AttemptAnswerResponse extends AttemptAnswer {
   id: string;
   createdAt: string;
   updatedAt: string;
+  isCorrect: boolean;
+  pointsAwarded: number;
 }
