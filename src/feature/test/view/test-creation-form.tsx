@@ -120,7 +120,7 @@ export function TestCreationForm({
       const response = await uploadFileMutation({ image: file });
       setCurrentQuestion({
         ...currentQuestion,
-        imageUrl: response.data?.imageUrl,
+        imageUrl: response.data?.imageUrl || "",
       });
     } catch (error) {
       console.error("Upload failed:", error);

@@ -52,7 +52,6 @@ import {
 import { TestTakingInterface } from "./test-taking-interface-view";
 import { useStartTestAttemptMutation } from "@/services/rtk-query/test-attempt/test-attempt-api";
 
-// Static test data based on the provided payload structure
 const mockTests = [
   {
     id: "1",
@@ -160,40 +159,16 @@ export function TestDashboard() {
   const [showTestInterface, setShowTestInterface] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
 
-  const [startTestAttempt, startTestAttemptState] =
-    useStartTestAttemptMutation();
-  const { data: allTestsData, isLoading: isLoadingAll } = useGetAllTestsQuery(
-    undefined,
-    {
-      skip: user?.role !== "super_admin",
-    }
-  );
-  const { data: companyTestsData, isLoading: isLoadingCompany } =
-    useGetAllCompanyTestsQuery(user?.company?.id || "", {
-      skip: user?.role !== "company_admin" || !user?.company.id,
-    });
-  const { data: userTestsData, isLoading: isLoadingUser } =
-    useGetAllUserTestsQuery(user?.id || "", {
-      skip: user?.role !== "employee" || !user?.id,
-    });
+  const { data: allTestsData, isLoading: isLoadingAll } = useGetAllTestsQuery();
+  const [testAttemptMut, testAttemptMutState] = useStartTestAttemptMutation();
 
   const isLoading =
     user?.role === "super_admin"
       ? isLoadingAll
-      : user?.role === "company_admin"
-      ? isLoadingCompany
-      : isLoadingUser;
+      : user?.role === "company_admin";
 
   let testsData = [];
-  if (user?.role === "super_admin") {
-    testsData = allTestsData || mockTests;
-  } else if (user?.role === "company_admin") {
-    testsData = companyTestsData || mockTests;
-  } else if (user?.role === "employee") {
-    testsData = userTestsData || mockTests;
-  } else {
-    testsData = mockTests;
-  }
+  testsData = allTestsData || mockTests;
 
   const filteredTests = testsData.filter((test) => {
     const matchesSearch =
@@ -215,27 +190,23 @@ export function TestDashboard() {
   };
 
   const getHeaderText = () => {
-    switch (user?.role) {
-      case "super_admin":
-        return {
-          title: "Test Management",
-          description: "Manage and monitor all assessment tests",
-        };
-      case "company_admin":
-        return {
-          title: "Company Tests",
-          description: "Manage tests assigned to your company",
-        };
-      case "employee":
-        return {
-          title: "My Tests",
-          description: "View and take your assigned tests",
-        };
-      default:
-        return {
-          title: "Test Management",
-          description: "Manage and monitor all assessment tests",
-        };
+    return {
+      title: "Test Management",
+      description: "Manage and monitor all assessment tests",
+    };
+  };
+
+  const handleStartTest = async () => {
+    if (!selectedTest || !user) return;
+    try {
+      await testAttemptMut({ testId: selectedTest.id, userId: user.id });
+      sessionStorage.setItem(
+        "currentTestAttempt",
+        JSON.stringify(testAttemptMutState.data)
+      );
+      setShowTestInterface(true);
+    } catch (error) {
+      console.error("Failed to start test attempt:", error);
     }
   };
 
@@ -472,26 +443,6 @@ export function TestDashboard() {
                           ) || 0}
                         </span>
                       </div>
-                      {user?.role === "employee" && (
-                        <>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              Max Attempts:
-                            </span>
-                            <span className="font-medium">10</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              Status:
-                            </span>
-                            <span className="font-medium">
-                              {new Date("2025-12-31") < new Date()
-                                ? "Expired"
-                                : "Active"}
-                            </span>
-                          </div>
-                        </>
-                      )}
                     </div>
                     <div className="mt-4 pt-4 border-t">
                       <div className="flex justify-between text-xs text-muted-foreground mb-2">
@@ -503,7 +454,7 @@ export function TestDashboard() {
                         variant={test.isActive ? "default" : "secondary"}
                         onClick={() => {
                           setSelectedTest(test);
-                          setShowTestInterface(true);
+                          handleStartTest();
                         }}
                         disabled={
                           !test.isActive ||
@@ -514,9 +465,6 @@ export function TestDashboard() {
                       >
                         {(test.questions?.length || 0) === 0
                           ? "No Questions"
-                          : user?.role === "employee" &&
-                            new Date("2025-12-31") < new Date()
-                          ? "Expired"
                           : "Take Test"}
                       </Button>
                     </div>
@@ -577,7 +525,7 @@ export function TestDashboard() {
                               size="sm"
                               onClick={() => {
                                 setSelectedTest(test);
-                                setShowTestInterface(true);
+                                handleStartTest();
                               }}
                               disabled={
                                 !test.isActive ||

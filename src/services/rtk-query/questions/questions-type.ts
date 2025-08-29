@@ -4,6 +4,6 @@ export interface QuestionPayload {
   text: string;
   type: string;
   points: number;
-  imageUrl: string;
+  imageUrl?: string;
   options: OptionPayload[];
 }

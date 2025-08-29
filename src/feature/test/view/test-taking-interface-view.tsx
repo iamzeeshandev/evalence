@@ -35,6 +35,7 @@ export function TestTakingInterface({
   const { user } = useAuth();
 
   const [saveAttemptAnswer] = useSaveAttemptAnswerMutation();
+  const attemptId = sessionStorage.getItem("currentTestAttempt") || "";
 
   // Timer effect
   useEffect(() => {
@@ -62,13 +63,12 @@ export function TestTakingInterface({
     if (currentQuestionIndex < test.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       const payload = {
-        attemptId: "string",
+        attemptId: attemptId,
         questionId: test.questions[currentQuestionIndex].id,
-        userId: user?.id,
+        userId: user?.id || "",
         selectedOptionIds: [answers[currentQuestionIndex]],
         timeSpentIncrementSec: 120000,
       };
-      debugger;
       await saveAttemptAnswer(payload);
     }
   };

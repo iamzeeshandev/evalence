@@ -16,7 +16,7 @@ const testsApi = appApi
       }),
       getAllTests: build.query<TestResponse[], void>({
         query: () => ({
-          url: `/tests`,
+          url: `/tests/list`,
           method: "GET",
         }),
         providesTags: [{ type: "Tests", id: "tests-list" }],
