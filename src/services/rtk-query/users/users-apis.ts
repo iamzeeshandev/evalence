@@ -14,6 +14,13 @@ const userApi = appApi
           method: "GET",
         }),
       }),
+      getAllUsersDropdown: build.query<User[], void>({
+        providesTags: [{ type: "User", id: "all-users" }],
+        query: () => ({
+          url: `/users/dropdown/users`,
+          method: "GET",
+        }),
+      }),
       userById: build.query<User, string | undefined>({
         providesTags: [{ type: "User", id: "user" }],
         query: (id) => ({
@@ -39,4 +46,8 @@ const userApi = appApi
     }),
   });
 
-export const { useGetAllUsersQuery, useLoginUserMutation } = userApi;
+export const {
+  useGetAllUsersQuery,
+  useLoginUserMutation,
+  useGetAllUsersDropdownQuery,
+} = userApi;

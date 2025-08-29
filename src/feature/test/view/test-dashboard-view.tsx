@@ -164,7 +164,6 @@ export function TestDashboard() {
         testId: selectedTest?.id,
         userId: user?.id || "000",
       }).unwrap();
-      debugger;
       // Store attempt ID in session storage
       sessionStorage.setItem("currentTestAttempt", `${result?.id}`);
       setShowTestInterface(true);
