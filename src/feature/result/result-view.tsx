@@ -54,7 +54,7 @@ const mockTestAttempts: TestAttemptResponse[] = [
     status: "submitted",
     totalPoints: 5,
     awardedPoints: 5,
-    percentage: "100.00",
+    percentage: 100.00,
     correctCount: 1,
     questionCount: 2,
     timeSpentSec: 15000,
@@ -140,7 +140,7 @@ const mockTestAttempts: TestAttemptResponse[] = [
     status: "submitted",
     totalPoints: 10,
     awardedPoints: 7,
-    percentage: "70.00",
+    percentage: 70.00,
     correctCount: 2,
     questionCount: 3,
     timeSpentSec: 25000,
@@ -210,7 +210,6 @@ interface TestResultsPageProps {
 
 export function TestResultsPage({
   users = mockUsers,
-
   loading = false,
 }: TestResultsPageProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
@@ -367,7 +366,7 @@ export function TestResultsPage({
                       </div>
                       <div className="flex items-center gap-2">
                         <Trophy className="h-4 w-4 text-yellow-500" />
-                        <span>{attempt.percentage}%</span>
+                        <span>{Math.round(attempt.percentage)}%</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-green-500" />
@@ -411,7 +410,7 @@ export function TestResultsPage({
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
-                    {selectedAttempt.percentage}%
+                    {Math.round(selectedAttempt.percentage)}%
                   </div>
                   <div className="text-sm text-muted-foreground">
                     Percentage

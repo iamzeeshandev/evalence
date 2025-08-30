@@ -29,6 +29,7 @@ import { SearchFilter } from "../components/search-filter";
 import { TestStatistics } from "../components/test-statistics";
 import { TestCreationForm } from "./test-creation-form";
 import { TestTakingInterface } from "./test-taking-interface-view";
+import { TestResponse } from "@/services/rtk-query/tests/tests-type";
 
 export function TestDashboard() {
   const { user } = useAuth();
@@ -40,7 +41,7 @@ export function TestDashboard() {
   const [showEditForm, setShowEditForm] = useState(false);
 
   const { data: allTestsData, isLoading: isLoadingAll } = useGetAllTestsQuery();
-  const { data: testAttemptsCount } = useGetTestAttemptsCountQuery({});
+  const { data: testAttemptsCount } = useGetTestAttemptsCountQuery();
   const [testAttemptMut, testAttemptMutState] = useStartTestAttemptMutation();
 
   const isLoading =
@@ -77,23 +78,21 @@ export function TestDashboard() {
     };
   };
 
-  const handleStartTest = async () => {
-    if (!selectedTest || !user) {
-      return;
-    }
+  const handleStartTest = async (test: TestResponse) => {
+    if (!test.id || !user) return;
     try {
+      sessionStorage.removeItem("currentTestAttempt");
       const result = await testAttemptMut({
-        testId: selectedTest?.id,
+        testId: test.id,
         userId: user?.id || "000",
       }).unwrap();
-      // Store attempt ID in session storage
       sessionStorage.setItem("currentTestAttempt", `${result?.id}`);
+      setSelectedTest(test); // still store in state if you need it later
       setShowTestInterface(true);
     } catch (error) {
       console.error("Failed to start test attempt:", error);
     }
   };
-
   const headerText = getHeaderText();
   const canCreateTests = ["super_admin", "employee", "company_admin"].includes(
     user?.role ?? ""
@@ -176,6 +175,11 @@ export function TestDashboard() {
                 </Card>
               ))}
             </div>
+          ) : filteredTests.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+              <p className="text-lg font-medium">No assessments available</p>
+              <p className="text-sm">Please check back later.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTests.map((test) => (
@@ -251,17 +255,15 @@ export function TestDashboard() {
                         <span>End: {formatDate(test.endDate)}</span>
                       </div>
                       <Button
-                        className="w-full"
+                        className="w-full cursor-pointer"
                         variant={test.isActive ? "default" : "secondary"}
-                        onClick={() => {
-                          setSelectedTest(test);
-                          handleStartTest();
-                        }}
+                        // onClick={() => {
+                        //   setSelectedTest(test);
+                        //   handleStartTest();
+                        // }}
+                        onClick={() => handleStartTest(test)}
                         disabled={
-                          !test.isActive ||
-                          (test.questions?.length || 0) === 0 ||
-                          (user?.role === "employee" &&
-                            new Date("2025-12-31") < new Date())
+                          !test.isActive || (test.questions?.length || 0) === 0
                         }
                       >
                         {(test.questions?.length || 0) === 0
@@ -324,10 +326,8 @@ export function TestDashboard() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setSelectedTest(test);
-                                handleStartTest();
-                              }}
+                              className="pointer"
+                              onClick={() => handleStartTest(test)}
                               disabled={
                                 !test.isActive ||
                                 (test.questions?.length || 0) === 0 ||
@@ -337,8 +337,7 @@ export function TestDashboard() {
                             >
                               {(test.questions?.length || 0) === 0
                                 ? "No Questions"
-                                : user?.role === "employee" &&
-                                  new Date("2025-12-31") < new Date()
+                                : user?.role === "employee"
                                 ? "Expired"
                                 : "Take Assessment"}
                             </Button>

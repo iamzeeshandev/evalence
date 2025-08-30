@@ -20,7 +20,7 @@ export interface TestAttemptResponse {
   status: "in_progress" | "submitted" | "expired";
   totalPoints: number;
   awardedPoints: number;
-  percentage: string;
+  percentage: number;
   correctCount: number;
   questionCount: number;
   timeSpentSec: number;
@@ -29,6 +29,6 @@ export interface TestAttemptResponse {
   submittedAt: string | null;
   createdAt: string;
   updatedAt: string;
-  test: TestResponse
-  attemptAnswers: AttemptAnswerResponse[]
+  test: TestResponse;
+  attemptAnswers: AttemptAnswerResponse[];
 }
