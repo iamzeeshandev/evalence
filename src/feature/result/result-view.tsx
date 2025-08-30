@@ -478,52 +478,54 @@ export function TestResultsPage({
                       </div>
 
                       <div className="space-y-2">
-                        {question.options.map((option) => {
-                          const isSelected = selectedOptions.some(
-                            (selected) => selected.id === option.id
-                          );
-                          const isCorrect = option.isCorrect;
+                        {[...question.options]
+                          ?.sort((a, b) => a.text.localeCompare(b.text))
+                          .map((option) => {
+                            const isSelected = selectedOptions.some(
+                              (selected) => selected.id === option.id
+                            );
+                            const isCorrect = option.isCorrect;
 
-                          let optionClass = "p-2 rounded border ";
-                          if (isSelected && isCorrect) {
-                            optionClass +=
-                              "bg-green-50 border-green-200 text-green-800";
-                          } else if (isSelected && !isCorrect) {
-                            optionClass +=
-                              "bg-red-50 border-red-200 text-red-800";
-                          } else if (!isSelected && isCorrect) {
-                            optionClass +=
-                              "bg-blue-50 border-blue-200 text-blue-800";
-                          } else {
-                            optionClass += "bg-gray-50 border-gray-200";
-                          }
+                            let optionClass = "p-2 rounded border ";
+                            if (isSelected && isCorrect) {
+                              optionClass +=
+                                "bg-green-50 border-green-200 text-green-800";
+                            } else if (isSelected && !isCorrect) {
+                              optionClass +=
+                                "bg-red-50 border-red-200 text-red-800";
+                            } else if (!isSelected && isCorrect) {
+                              optionClass +=
+                                "bg-blue-50 border-blue-200 text-blue-800";
+                            } else {
+                              optionClass += "bg-gray-50 border-gray-200";
+                            }
 
-                          return (
-                            <div key={option.id} className={optionClass}>
-                              <div className="flex items-center justify-between">
-                                <span>{option.text}</span>
-                                <div className="flex items-center gap-2">
-                                  {isSelected && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      Selected
-                                    </Badge>
-                                  )}
-                                  {isCorrect && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs bg-green-100"
-                                    >
-                                      Correct
-                                    </Badge>
-                                  )}
+                            return (
+                              <div key={option.id} className={optionClass}>
+                                <div className="flex items-center justify-between">
+                                  <span>{option.text}</span>
+                                  <div className="flex items-center gap-2">
+                                    {isSelected && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        Selected
+                                      </Badge>
+                                    )}
+                                    {isCorrect && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs bg-green-100"
+                                      >
+                                        Correct
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
                       </div>
                     </div>
                   );

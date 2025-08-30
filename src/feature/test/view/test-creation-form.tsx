@@ -38,6 +38,7 @@ interface TestCreationFormProps {
   onClose: () => void;
   testData?: any;
   isEditing?: boolean;
+  testId?: string;
 }
 
 const useUploadFile = () => {
@@ -72,6 +73,7 @@ export function TestCreationForm({
   onClose,
   testData: initialTestData,
   isEditing = false,
+  testId,
 }: TestCreationFormProps) {
   const [testData, setTestData] = useState({
     title: initialTestData?.title || "",
@@ -106,7 +108,7 @@ export function TestCreationForm({
   const { uploadFile } = useUploadFile();
   const [uploadFileMutation] = useFileUploadMutation();
   const [saveTestMutation, saveTestMutationState] = useSaveTestMutation();
-  const [updateTestMutation] = useUpdateTestMutation();
+  const [updateTestMutation, updateTestMutationState] = useUpdateTestMutation();
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -133,24 +135,27 @@ export function TestCreationForm({
     setCurrentQuestion({ ...currentQuestion, imageUrl: "" });
   };
 
-const addQuestion = () => {
-  if (
-    currentQuestion.text &&
-    currentQuestion.options.some((opt) => opt.text)
-  ) {
-    // Save the current question
-    setQuestions([...questions, { ...currentQuestion }]);
+  const addQuestion = () => {
+    if (
+      currentQuestion.text &&
+      currentQuestion.options.some((opt) => opt.text)
+    ) {
+      // Save the current question
+      setQuestions([...questions, { ...currentQuestion }]);
 
-    // Reset state for a fresh question
-    setCurrentQuestion({
-      text: "",
-      type: "single",
-      points: 5,
-      imageUrl: "",
-      options: Array.from({ length: 4 }, () => ({ text: "", isCorrect: false })), // start with 4 defaults
-    });
-  }
-};
+      // Reset state for a fresh question
+      setCurrentQuestion({
+        text: "",
+        type: "single",
+        points: 5,
+        imageUrl: "",
+        options: Array.from({ length: 4 }, () => ({
+          text: "",
+          isCorrect: false,
+        })), // start with 4 defaults
+      });
+    }
+  };
 
   const removeQuestion = (index: number) => {
     setQuestions(questions.filter((_, i) => i !== index));
@@ -208,6 +213,27 @@ const addQuestion = () => {
       JSON.stringify(payload, null, 2)
     );
     onClose();
+  };
+
+  const handleUpdateTest = async () => {
+    if (testId) {
+      const payload = {
+        ...testData,
+        startDate: testData.startDate
+          ? new Date(testData.startDate).toISOString()
+          : "",
+        endDate: testData.endDate
+          ? new Date(testData.endDate).toISOString()
+          : "",
+        questions: questions,
+      };
+      await updateTestMutation({ id: testId, payload });
+      console.log(
+        `${isEditing ? "Updated" : "Created"} test payload:`,
+        JSON.stringify(payload, null, 2)
+      );
+      onClose();
+    }
   };
 
   return (
@@ -495,11 +521,12 @@ const addQuestion = () => {
           Cancel
         </Button>
         <Button
-          onClick={handleSaveTest}
+          onClick={isEditing ? handleUpdateTest : handleSaveTest}
           disabled={
             !testData.title ||
             questions.length === 0 ||
-            saveTestMutationState.isLoading
+            saveTestMutationState.isLoading ||
+            updateTestMutationState.isLoading
           }
         >
           <Save className="h-4 w-4 mr-2" />
