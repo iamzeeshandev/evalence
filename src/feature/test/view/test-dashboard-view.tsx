@@ -94,7 +94,9 @@ export function TestDashboard() {
     }
   };
   const headerText = getHeaderText();
-  const canCreateTests = user?.role === "super_admin";
+  const canCreateTests = ["super_admin", "employee", "company_admin"].includes(
+    user?.role ?? ""
+  );
 
   const completedAttempts = testsData.reduce((acc) => acc + 1, 0);
   const activeTests =
@@ -373,6 +375,7 @@ export function TestDashboard() {
             {selectedTest && (
               <TestCreationForm
                 testData={selectedTest}
+                testId={selectedTest?.id}
                 isEditing={true}
                 onClose={() => setShowEditForm(false)}
               />
