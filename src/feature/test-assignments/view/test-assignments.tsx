@@ -502,12 +502,12 @@ export function TestAssignmentSystem() {
                       <span>{assignment.company.name}</span>
                     </div>
                   )}
-                  {"user" in assignment && assignment.user && (
+                  {/* {"user" in assignment && assignment.user && (
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <span>{assignment.user.name}</span>
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Assignment dates */}
