@@ -20,7 +20,7 @@ import {
 } from "@/services/rtk-query";
 import { useFileUploadMutation } from "@/services/rtk-query/file/file-api";
 import { Edit, ImageIcon, Plus, Save, Trash2, Upload, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Question {
   text: string;
@@ -101,6 +101,13 @@ export function TestCreationForm({
       { text: "", isCorrect: false },
     ],
   });
+
+  useEffect(() => {
+    if (isEditing) {
+      setQuestionsAddedCount(initialTestData?.questions.length + 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing]);
 
   const [isUploading, setIsUploading] = useState(false);
   const { uploadFile } = useUploadFile();
@@ -493,27 +500,29 @@ export function TestCreationForm({
                     />
                   )}
                   <div className="space-y-1">
-                    {question.options.map((option, optIndex) => (
-                      <div
-                        key={optIndex}
-                        className="flex items-center space-x-2 text-sm"
-                      >
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            option.isCorrect ? "bg-green-500" : "bg-gray-300"
-                          }`}
-                        />
-                        <span
-                          className={
-                            option.isCorrect
-                              ? "font-medium text-green-700"
-                              : "text-muted-foreground"
-                          }
+                    {[...question.options]
+                      ?.sort((a, b) => a.text.localeCompare(b.text))
+                      .map((option, optIndex) => (
+                        <div
+                          key={optIndex}
+                          className="flex items-center space-x-2 text-sm"
                         >
-                          {option.text}
-                        </span>
-                      </div>
-                    ))}
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              option.isCorrect ? "bg-green-500" : "bg-gray-300"
+                            }`}
+                          />
+                          <span
+                            className={
+                              option.isCorrect
+                                ? "font-medium text-green-700"
+                                : "text-muted-foreground"
+                            }
+                          >
+                            {option.text}
+                          </span>
+                        </div>
+                      ))}
                   </div>
                 </div>
               ))}
