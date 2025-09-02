@@ -151,7 +151,7 @@ export function TestTakingInterface({
                   </div>
                   <div className="text-sm text-muted-foreground">Incorrect</div>
                 </div>
-                <div>
+                {/* <div>
                   <div className="text-2xl font-bold">{score.earnedPoints}</div>
                   <div className="text-sm text-muted-foreground">
                     Points Earned
@@ -162,7 +162,7 @@ export function TestTakingInterface({
                   <div className="text-sm text-muted-foreground">
                     Total Points
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 

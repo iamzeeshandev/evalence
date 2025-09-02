@@ -1,7 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -12,19 +15,17 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { ChevronRight, type LucideIcon } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 type NavItem = {
   title: string;
   url: string;
   icon?: LucideIcon;
   isActive?: boolean;
+  disabled?: boolean;
   children?: NavItem[];
   items?: NavItem[];
 };
@@ -78,7 +79,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton
                                 asChild
-                                aria-disabled
+                                aria-disabled={subItem?.disabled}
                                 className={cn(
                                   "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
                                   isSubActive

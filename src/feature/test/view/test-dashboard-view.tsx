@@ -23,13 +23,13 @@ import {
   useGetTestAttemptsCountQuery,
   useStartTestAttemptMutation,
 } from "@/services/rtk-query/test-attempt/test-attempt-api";
+import { TestResponse } from "@/services/rtk-query/tests/tests-type";
 import { Clock, Edit, Plus } from "lucide-react";
 import { useState } from "react";
 import { SearchFilter } from "../components/search-filter";
 import { TestStatistics } from "../components/test-statistics";
 import { TestCreationForm } from "./test-creation-form";
 import { TestTakingInterface } from "./test-taking-interface-view";
-import { TestResponse } from "@/services/rtk-query/tests/tests-type";
 
 export function TestDashboard() {
   const { user } = useAuth();
@@ -73,8 +73,8 @@ export function TestDashboard() {
 
   const getHeaderText = () => {
     return {
-      title: "Performance Assessment",
-      description: "Manage and monitor all assessment tests",
+      title: "Instrument Performance",
+      description: "Manage access instrument",
     };
   };
 
@@ -116,7 +116,7 @@ export function TestDashboard() {
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Create New Assessment
+                Create New Instrument
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -237,7 +237,7 @@ export function TestDashboard() {
                           {test.questions?.length || 0}
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      {/* <div className="flex justify-between">
                         <span className="text-muted-foreground">
                           Total Points:
                         </span>
@@ -247,13 +247,9 @@ export function TestDashboard() {
                             0
                           ) || 0}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                     <div className="mt-4 pt-4 border-t">
-                      <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                        <span>Start: {formatDate(test.startDate)}</span>
-                        <span>End: {formatDate(test.endDate)}</span>
-                      </div>
                       <Button
                         className="w-full cursor-pointer"
                         variant={test.isActive ? "default" : "secondary"}

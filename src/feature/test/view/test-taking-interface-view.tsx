@@ -233,7 +233,7 @@ export function TestTakingInterface({
                 ? "Single Choice"
                 : "Multiple Choice"}
             </Badge>
-            <span>{currentQuestion.points} point(s)</span>
+            {/* <span>{currentQuestion.points} point(s)</span> */}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

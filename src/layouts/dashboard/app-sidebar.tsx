@@ -18,11 +18,23 @@ const data = {
   },
   navMain: [
     {
-      title: "Evaluation Form",
-      url: "/test",
+      title: "Assessment center",
+      url: "/",
+      items: [
+        {
+          title: "Instrument Creation",
+          url: "/test",
+          disabled: false,
+        },
+        {
+          title: "Battery Calibration",
+          url: "/",
+          disabled: true,
+        },
+      ],
     },
     {
-      title: "Assessment Result",
+      title: "Evaluation Result",
       url: "/result",
     },
     {
@@ -32,10 +44,12 @@ const data = {
         {
           title: "Companies",
           url: "/company-management/companies",
+          disabled: true,
         },
         {
           title: "Users",
           url: "/company-management/users",
+          disabled: true,
         },
       ],
     },

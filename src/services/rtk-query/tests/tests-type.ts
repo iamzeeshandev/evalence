@@ -7,8 +7,7 @@ export interface TestPayload {
   description: string;
   isActive: boolean;
   duration: number;
-  startDate: string;
-  endDate: string;
+
   questions: QuestionPayload[];
 }
 
@@ -17,8 +16,6 @@ export interface TestResponse {
   title: string;
   description: string;
   duration: number;
-  startDate: string;
-  endDate: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -43,6 +40,7 @@ export interface Question {
   text: string;
   type: string;
   points: number;
+  questionNo: number;
   imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;

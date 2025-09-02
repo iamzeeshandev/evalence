@@ -2,7 +2,6 @@
 
 import type React from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +26,7 @@ interface Question {
   text: string;
   type: "single";
   points: number;
+  questionNo: number;
   imageUrl?: string;
   options: Array<{
     text: string;
@@ -80,21 +80,19 @@ export function TestCreationForm({
     description: initialTestData?.description || "",
     isActive: initialTestData?.isActive ?? true,
     duration: initialTestData?.duration || 60,
-    startDate: initialTestData?.startDate
-      ? new Date(initialTestData.startDate).toISOString().slice(0, 16)
-      : "",
-    endDate: initialTestData?.endDate
-      ? new Date(initialTestData.endDate).toISOString().slice(0, 16)
-      : "",
   });
 
   const [questions, setQuestions] = useState<Question[]>(
     initialTestData?.questions || []
   );
+
+  const [questionsAddedCount, setQuestionsAddedCount] = useState<number>(1);
+  const [editingQuestion, setEditQuestion] = useState<boolean>(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question>({
     text: "",
     type: "single",
     points: 5,
+    questionNo: questionsAddedCount || 1,
     imageUrl: "",
     options: [
       { text: "", isCorrect: false },
@@ -140,31 +138,64 @@ export function TestCreationForm({
       currentQuestion.text &&
       currentQuestion.options.some((opt) => opt.text)
     ) {
-      // Save the current question
-      setQuestions([...questions, { ...currentQuestion }]);
+      if (editingQuestion) {
+        // ✅ Update existing question
+        setQuestions((prevQuestions) =>
+          prevQuestions.map((q) =>
+            q.questionNo === currentQuestion.questionNo
+              ? { ...currentQuestion }
+              : q
+          )
+        );
+
+        setEditQuestion(false); // exit editing mode
+      } else {
+        // ✅ Add new question
+        setQuestions([
+          ...questions,
+          { ...currentQuestion, questionNo: questionsAddedCount },
+        ]);
+        setQuestionsAddedCount(questionsAddedCount + 1);
+      }
 
       // Reset state for a fresh question
       setCurrentQuestion({
         text: "",
         type: "single",
         points: 5,
+        questionNo: editingQuestion ? questionsAddedCount : questionsAddedCount,
         imageUrl: "",
         options: Array.from({ length: 4 }, () => ({
           text: "",
           isCorrect: false,
-        })), // start with 4 defaults
+        })),
       });
     }
   };
 
-  const removeQuestion = (index: number) => {
-    setQuestions(questions.filter((_, i) => i !== index));
+  const deleteQuestion = (questionNumber: number) => {
+    setQuestions((prevQuestions) => {
+      const updated = prevQuestions
+        .filter((q) => q.questionNo !== questionNumber) // remove the one to delete
+        .map((q) =>
+          q.questionNo > questionNumber
+            ? { ...q, questionNo: q.questionNo - 1 } // shift later ones
+            : q
+        );
+
+      return updated.sort((a, b) => a.questionNo - b.questionNo);
+    });
+
+    setQuestionsAddedCount(questionsAddedCount - 1);
   };
 
-  const editQuestion = (index: number) => {
-    const questionToEdit = questions[index];
-    setCurrentQuestion({ ...questionToEdit });
-    removeQuestion(index);
+  const editQuestion = (questionNumber: number) => {
+    const questionToEdit = questions.find(
+      (question) => question?.questionNo === questionNumber
+    );
+    if (questionToEdit) {
+      setCurrentQuestion({ ...questionToEdit });
+    }
   };
 
   const addOption = () => {
@@ -201,10 +232,6 @@ export function TestCreationForm({
   const handleSaveTest = async () => {
     const payload = {
       ...testData,
-      startDate: testData.startDate
-        ? new Date(testData.startDate).toISOString()
-        : "",
-      endDate: testData.endDate ? new Date(testData.endDate).toISOString() : "",
       questions: questions,
     };
     await saveTestMutation(payload);
@@ -219,12 +246,6 @@ export function TestCreationForm({
     if (testId) {
       const payload = {
         ...testData,
-        startDate: testData.startDate
-          ? new Date(testData.startDate).toISOString()
-          : "",
-        endDate: testData.endDate
-          ? new Date(testData.endDate).toISOString()
-          : "",
         questions: questions,
       };
       await updateTestMutation({ id: testId, payload });
@@ -291,31 +312,6 @@ export function TestCreationForm({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="datetime-local"
-                value={testData.startDate}
-                onChange={(e) =>
-                  setTestData({ ...testData, startDate: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="datetime-local"
-                value={testData.endDate}
-                onChange={(e) =>
-                  setTestData({ ...testData, endDate: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
           <div className="flex items-center space-x-2">
             <Switch
               id="isActive"
@@ -332,7 +328,13 @@ export function TestCreationForm({
       {/* Question Creation */}
       <Card>
         <CardHeader>
-          <CardTitle>Add Question</CardTitle>
+          <CardTitle>
+            {`${
+              editingQuestion
+                ? `Edit Question ${currentQuestion?.questionNo}`
+                : `Add Question ${questionsAddedCount}`
+            }`}
+          </CardTitle>
           <CardDescription>Create multiple choice questions</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -392,7 +394,7 @@ export function TestCreationForm({
             )}
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="points">Points</Label>
             <Input
               id="points"
@@ -406,7 +408,7 @@ export function TestCreationForm({
               }
               className="w-24"
             />
-          </div>
+          </div> */}
 
           <Label>Answer Options</Label>
           {currentQuestion.options.map((option, index) => (
@@ -458,20 +460,25 @@ export function TestCreationForm({
               {questions.map((question, index) => (
                 <div key={index} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium">Question {index + 1}</h4>
+                    <h4 className="font-medium">
+                      Question {question?.questionNo}
+                    </h4>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{question.points} pts</Badge>
+                      {/* <Badge variant="secondary">{question.points} pts</Badge> */}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => editQuestion(index)}
+                        onClick={() => {
+                          setEditQuestion(true);
+                          editQuestion(question?.questionNo);
+                        }}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeQuestion(index)}
+                        onClick={() => deleteQuestion(question?.questionNo)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

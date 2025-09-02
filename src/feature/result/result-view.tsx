@@ -17,15 +17,7 @@ import {
 } from "@/components/ui/select";
 import { useLazyGetUserTestAttemptListByIdQuery } from "@/services/rtk-query/test-attempt/test-attempt-api";
 import { TestAttemptResponse } from "@/services/rtk-query/test-attempt/test-attempt-type";
-import {
-  Calendar,
-  CheckCircle,
-  Clock,
-  Target,
-  Trophy,
-  User,
-  XCircle,
-} from "lucide-react";
+import { Calendar, Clock, Trophy, User } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const mockUsers: any[] = [
@@ -54,7 +46,7 @@ const mockTestAttempts: TestAttemptResponse[] = [
     status: "submitted",
     totalPoints: 5,
     awardedPoints: 5,
-    percentage: 100.00,
+    percentage: 100.0,
     correctCount: 1,
     questionCount: 2,
     timeSpentSec: 15000,
@@ -68,8 +60,6 @@ const mockTestAttempts: TestAttemptResponse[] = [
       title: "Demo Test New",
       description: "Demo Test New",
       duration: 60,
-      startDate: "2025-08-25T11:09:00.000Z",
-      endDate: "2025-09-06T11:10:00.000Z",
       isActive: true,
       createdAt: "2025-08-29T11:10:40.671Z",
       updatedAt: "2025-08-29T11:14:11.362Z",
@@ -78,6 +68,7 @@ const mockTestAttempts: TestAttemptResponse[] = [
           id: "ab6a7222-727d-4c0b-ad6c-ef87cfa3700b",
           text: "Demo Test New Question",
           type: "single",
+          questionNo: 1,
           points: 5,
           imageUrl:
             "http://localhost:3000/uploads/image-1756465815986-472599812.png",
@@ -140,7 +131,7 @@ const mockTestAttempts: TestAttemptResponse[] = [
     status: "submitted",
     totalPoints: 10,
     awardedPoints: 7,
-    percentage: 70.00,
+    percentage: 70.0,
     correctCount: 2,
     questionCount: 3,
     timeSpentSec: 25000,
@@ -154,8 +145,6 @@ const mockTestAttempts: TestAttemptResponse[] = [
       title: "Mathematics Quiz",
       description: "Basic mathematics assessment",
       duration: 45,
-      startDate: "2025-08-20T09:00:00.000Z",
-      endDate: "2025-09-10T18:00:00.000Z",
       isActive: true,
       createdAt: "2025-08-20T09:00:00.000Z",
       updatedAt: "2025-08-20T09:00:00.000Z",
@@ -165,6 +154,7 @@ const mockTestAttempts: TestAttemptResponse[] = [
           text: "What is 2 + 2?",
           type: "single",
           points: 3,
+          questionNo: 1,
           createdAt: "2025-08-20T09:00:00.000Z",
           updatedAt: "2025-08-20T09:00:00.000Z",
           options: [
@@ -358,12 +348,12 @@ export function TestResultsPage({
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
+                      {/* <div className="flex items-center gap-2">
                         <Target className="h-4 w-4 text-blue-500" />
                         <span>
                           Score: {attempt.awardedPoints}/{attempt.totalPoints}
                         </span>
-                      </div>
+                      </div> */}
                       <div className="flex items-center gap-2">
                         <Trophy className="h-4 w-4 text-yellow-500" />
                         <span>{Math.round(attempt.percentage)}%</span>
@@ -399,15 +389,15 @@ export function TestResultsPage({
           {selectedAttempt && (
             <div className="space-y-6">
               {/* Summary Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
-                <div className="text-center">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
+                {/* <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">
                     {selectedAttempt.awardedPoints}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     Points Earned
                   </div>
-                </div>
+                </div> */}
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
                     {Math.round(selectedAttempt.percentage)}%
@@ -437,98 +427,100 @@ export function TestResultsPage({
               {/* Questions and Answers */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Questions & Answers</h3>
-                {selectedAttempt.test.questions.map((question, index) => {
-                  const userAnswer = selectedAttempt.attemptAnswers.find(
-                    (answer) => answer.questionId === question.id
-                  );
-                  const selectedOptions = question.options.filter((option) =>
-                    userAnswer?.selectedOptionIds.includes(option.id)
-                  );
-                  const correctOptions = question.options.filter(
-                    (option) => option.isCorrect
-                  );
+                {(selectedAttempt?.test?.questions ?? []).map(
+                  (question, index) => {
+                    const userAnswer = selectedAttempt.attemptAnswers.find(
+                      (answer) => answer.questionId === question.id
+                    );
+                    const selectedOptions = question.options.filter((option) =>
+                      userAnswer?.selectedOptionIds.includes(option.id)
+                    );
+                    const correctOptions = question.options.filter(
+                      (option) => option.isCorrect
+                    );
 
-                  return (
-                    <div key={question.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h4 className="font-medium mb-2">
-                            Question {index + 1}: {question.text}
-                          </h4>
-                          {question.imageUrl && (
-                            <img
-                              src={question.imageUrl || "/placeholder.svg"}
-                              alt="Question image"
-                              className="max-w-md h-auto rounded-lg mb-3"
-                            />
-                          )}
+                    return (
+                      <div key={question.id} className="border rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h4 className="font-medium mb-2">
+                              Question {question?.questionNo}: {question.text}
+                            </h4>
+                            {question.imageUrl && (
+                              <img
+                                src={question.imageUrl || "/placeholder.svg"}
+                                alt="Question image"
+                                className="max-w-md h-auto rounded-lg mb-3"
+                              />
+                            )}
+                          </div>
+                          {/* <div className="flex items-center gap-2">
+                            {userAnswer?.isCorrect ? (
+                              <CheckCircle className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-red-500" />
+                            )}
+                            <span className="text-sm font-medium">
+                              {userAnswer?.pointsAwarded || 0}/{question.points}{" "}
+                              pts
+                            </span>
+                          </div> */}
                         </div>
-                        <div className="flex items-center gap-2">
-                          {userAnswer?.isCorrect ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                          ) : (
-                            <XCircle className="h-5 w-5 text-red-500" />
-                          )}
-                          <span className="text-sm font-medium">
-                            {userAnswer?.pointsAwarded || 0}/{question.points}{" "}
-                            pts
-                          </span>
-                        </div>
-                      </div>
 
-                      <div className="space-y-2">
-                        {[...question.options]
-                          ?.sort((a, b) => a.text.localeCompare(b.text))
-                          .map((option) => {
-                            const isSelected = selectedOptions.some(
-                              (selected) => selected.id === option.id
-                            );
-                            const isCorrect = option.isCorrect;
+                        <div className="space-y-2">
+                          {[...question.options]
+                            ?.sort((a, b) => a.text.localeCompare(b.text))
+                            .map((option) => {
+                              const isSelected = selectedOptions.some(
+                                (selected) => selected.id === option.id
+                              );
+                              const isCorrect = option.isCorrect;
 
-                            let optionClass = "p-2 rounded border ";
-                            if (isSelected && isCorrect) {
-                              optionClass +=
-                                "bg-green-50 border-green-200 text-green-800";
-                            } else if (isSelected && !isCorrect) {
-                              optionClass +=
-                                "bg-red-50 border-red-200 text-red-800";
-                            } else if (!isSelected && isCorrect) {
-                              optionClass +=
-                                "bg-blue-50 border-blue-200 text-blue-800";
-                            } else {
-                              optionClass += "bg-gray-50 border-gray-200";
-                            }
+                              let optionClass = "p-2 rounded border ";
+                              if (isSelected && isCorrect) {
+                                optionClass +=
+                                  "bg-green-50 border-green-200 text-green-800";
+                              } else if (isSelected && !isCorrect) {
+                                optionClass +=
+                                  "bg-red-50 border-red-200 text-red-800";
+                              } else if (!isSelected && isCorrect) {
+                                optionClass +=
+                                  "bg-blue-50 border-blue-200 text-blue-800";
+                              } else {
+                                optionClass += "bg-gray-50 border-gray-200";
+                              }
 
-                            return (
-                              <div key={option.id} className={optionClass}>
-                                <div className="flex items-center justify-between">
-                                  <span>{option.text}</span>
-                                  <div className="flex items-center gap-2">
-                                    {isSelected && (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        Selected
-                                      </Badge>
-                                    )}
-                                    {isCorrect && (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs bg-green-100"
-                                      >
-                                        Correct
-                                      </Badge>
-                                    )}
+                              return (
+                                <div key={option.id} className={optionClass}>
+                                  <div className="flex items-center justify-between">
+                                    <span>{option.text}</span>
+                                    <div className="flex items-center gap-2">
+                                      {isSelected && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs"
+                                        >
+                                          Selected
+                                        </Badge>
+                                      )}
+                                      {isCorrect && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs bg-green-100"
+                                        >
+                                          Correct
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
             </div>
           )}
