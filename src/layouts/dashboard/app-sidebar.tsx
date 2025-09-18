@@ -43,13 +43,13 @@ const data = {
       items: [
         {
           title: "Companies",
-          url: "/company-management/companies",
-          disabled: true,
+          url: "/company",
+          disabled: false,
         },
         {
           title: "Users",
           url: "/company-management/users",
-          disabled: true,
+          disabled: false,
         },
       ],
     },

@@ -2,19 +2,28 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Form } from "@/components/ui/form";
+import { Field } from "@/components/core/hook-form";
 import { useLoginUserMutation } from "@/services/rtk-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: 'Email address required' })
+    .email({ message: 'Invalid email format' }),
+  password: z
+    .string()
+    .min(1, { message: 'Password required' })
+    .min(8, { message: 'Must be at least 8 characters' }),
+});
 
 export function LoginForm({
   className,
@@ -22,85 +31,111 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const { login } = useAuth();
   const [loginUserMut, { isLoading }] = useLoginUserMutation();
+  const [passwordVisibility, setPasswordVisibility] = useState(false);
 
-  const [email, setEmail] = useState("john.doe@company.com");
-  const [password, setPassword] = useState("password123");
-  const [error, setError] = useState<string | null>(null);
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-
+  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     try {
-      const result = await loginUserMut({ email, password }).unwrap();
+      const result = await loginUserMut({ email: values.email, password: values.password }).unwrap();
       if (result) {
         login(result);
-      } else {
-        setError("Invalid email or password.");
       }
     } catch (err: any) {
-      setError(err?.data?.message || "Login failed. Please try again.");
+      // Handle API errors - you can set form-level errors here if needed
+      const errorMessage = err?.data?.message || "Login failed. Please try again.";
+      console.error("Login failed:", errorMessage);
+      
+      // Optionally set a form-level error
+      form.setError("root", {
+        type: "manual",
+        message: errorMessage,
+      });
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setPasswordVisibility(!passwordVisibility);
   };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="shadow-lg border rounded-2xl">
-        <CardHeader className="">
-          <h1 className="text-center text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            Evalence
-          </h1>
-          <CardTitle className="mt-4">Login to your account</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="test@evalence.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-3">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+      <div className="shadow-lg border rounded-2xl p-8">
+        <h1 className="text-center text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-8">
+          Evalence
+        </h1>
+        
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className={cn('space-y-6')}
+          >
+            <div className="flex flex-col items-start gap-2 text-start">
+              <h1 className="text-4xl font-semibold">LOGIN</h1>
+            </div>
 
-              {error && (
-                <p className="text-sm text-red-600 font-medium">{error}</p>
-              )}
+            <div className="space-y-4">
+              <Field.Text 
+                name="email" 
+                label="Email" 
+                placeholder="your-email@domain.com" 
+                required 
+              />
+              <Field.Text
+                name="password"
+                label="Password"
+                type={passwordVisibility ? 'text' : 'password'}
+                placeholder="Enter your password"
+                trailingIcon={
+                  passwordVisibility ? (
+                    <EyeOff className="h-5 w-5 cursor-pointer" onClick={togglePasswordVisibility} />
+                  ) : (
+                    <Eye className="h-5 w-5 cursor-pointer" onClick={togglePasswordVisibility} />
+                  )
+                }
+                required
+              />
+            </div>
 
-              <div className="flex flex-col gap-3">
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Logging in..." : "Login"}
-                </Button>
+            {form.formState.errors.root && (
+              <div className="text-sm text-red-600 font-medium">
+                {form.formState.errors.root.message}
               </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2"></div>
+              <a href="/forgot-password" className="cursor-pointer hover:text-red-500">
+                Forgot password?
+              </a>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full mb-3"
+              disabled={isLoading}
+            >
+              {isLoading ? "Logging in..." : "Login To Dashboard"}
+            </Button>
+
+            <div className="text-center text-sm">
+              Create an account?{" "}
+              <Link
+                href="/auth/sign-up"
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                Sign up
+              </Link>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </Form>
+      </div>
     </div>
   );
 }
