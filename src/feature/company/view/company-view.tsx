@@ -1,15 +1,8 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -26,34 +20,41 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Plus,
-  Search,
-  Filter,
-  Building2,
-  Users,
-  ClipboardList,
-  Edit,
-  Trash2,
-  Mail,
-  Phone,
-  MapPin,
-} from "lucide-react";
-import {
-  Company,
-  CompanyPayload,
-} from "@/services/rtk-query/company/company-type";
-import {
   useDeleteCompanyMutation,
   useGetAllCompaniesQuery,
   useSaveCompanyMutation,
   useUpdateCompanyMutation,
 } from "@/services/rtk-query";
+import {
+  Company,
+  CompanyPayload,
+  UpdateCompanyPayload,
+} from "@/services/rtk-query/company/company-type";
+import {
+  Building2,
+  ClipboardList,
+  Edit,
+  Filter,
+  Mail,
+  MapPin,
+  Phone,
+  Plus,
+  Search,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
+import { AddCompanyForm } from "../form/add-company-form";
+import { EditCompanyForm } from "../form/edit-company-form";
 const mockCompanies: Company[] = [
   {
     id: "1",
-    name: "TechCorp Solutions",
+    companyName: "TechCorp Solutions",
+    firstName: "Salman",
+    lastName: "Sheikh",
+    role: "company_admin",
     email: "admin@techcorp.com",
-    phone: "+1-555-0123",
+    companyPhone: "+1-555-0123",
     address: "123 Tech Street, Silicon Valley, CA 94000",
     city: "Silicon Valley",
     state: "CA",
@@ -69,9 +70,12 @@ const mockCompanies: Company[] = [
   },
   {
     id: "1",
-    name: "TechCorp Solutions",
+    companyName: "TechCorp Solutions",
     email: "admin@techcorp.com",
-    phone: "+1-555-0123",
+    companyPhone: "+1-555-0123",
+    firstName: "Salman",
+    lastName: "Sheikh",
+    role: "company_admin",
     address: "123 Tech Street, Silicon Valley, CA 94000",
     city: "Silicon Valley",
     state: "CA",
@@ -103,7 +107,7 @@ export function CompanyManagement() {
 
   const filteredCompanies = companies.filter((company) => {
     const matchesSearch =
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       company.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "all" ||
@@ -117,6 +121,17 @@ export function CompanyManagement() {
       year: "numeric",
       month: "short",
       day: "numeric",
+    });
+  };
+
+  const handleCreateCompany = (data: CompanyPayload) => {
+    createCompany(data);
+  };
+
+  const handleEditCompany = (data: UpdateCompanyPayload) => {
+    updateCompany({
+      id: selectedCompany!.id,
+      data,
     });
   };
 
@@ -143,9 +158,9 @@ export function CompanyManagement() {
             <DialogHeader>
               <DialogTitle>Add New Company</DialogTitle>
             </DialogHeader>
-            <CompanyForm
+            <AddCompanyForm
               onClose={() => setShowCreateForm(false)}
-              onSubmit={createCompany}
+              onSubmit={handleCreateCompany}
               isLoading={isCreating}
             />
           </DialogContent>
@@ -271,7 +286,7 @@ export function CompanyManagement() {
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <CardTitle className="text-lg">
-                          {company.name}
+                          {company.companyName}
                         </CardTitle>
                         <div className="flex items-center gap-2">
                           <Badge
@@ -309,10 +324,10 @@ export function CompanyManagement() {
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         <span className="truncate">{company.email}</span>
                       </div>
-                      {company.phone && (
+                      {company.companyPhone && (
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span>{company.phone}</span>
+                          <span>{company.companyPhone}</span>
                         </div>
                       )}
                       {company.address && (
@@ -373,7 +388,9 @@ export function CompanyManagement() {
                         className="border-b hover:bg-muted/50"
                       >
                         <td className="p-4">
-                          <div className="font-medium">{company.name}</div>
+                          <div className="font-medium">
+                            {company.companyName}
+                          </div>
                         </td>
                         <td className="p-4">
                           <Badge
@@ -426,128 +443,20 @@ export function CompanyManagement() {
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Company: {selectedCompany?.name}</DialogTitle>
+            <DialogTitle>
+              Edit Company: {selectedCompany?.companyName}
+            </DialogTitle>
           </DialogHeader>
           {selectedCompany && (
-            <CompanyForm
+            <EditCompanyForm
               company={selectedCompany}
+              onSubmit={handleEditCompany}
               onClose={() => setShowEditForm(false)}
-              onSubmit={(payload) =>
-                updateCompany({
-                  id: selectedCompany.id,
-                  data: { ...selectedCompany, ...payload },
-                })
-              }
               isLoading={isUpdating}
             />
           )}
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-interface CompanyFormProps {
-  company?: Company;
-  onClose: () => void;
-  onSubmit: (payload: CompanyPayload) => void;
-  isLoading: boolean;
-}
-
-function CompanyForm({
-  company,
-  onClose,
-  onSubmit,
-  isLoading,
-}: CompanyFormProps) {
-  const [formData, setFormData] = useState<CompanyPayload>({
-    name: company?.name || "",
-    email: company?.email || "",
-    phone: company?.phone || "",
-    address: company?.address || "",
-    isActive: company?.isActive ?? true,
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-    onClose();
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Company Name</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Enter company name"
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            placeholder="Enter company email"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone (Optional)</Label>
-        <Input
-          id="phone"
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          placeholder="Enter phone number"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="address">Address (Optional)</Label>
-        <Textarea
-          id="address"
-          value={formData.address}
-          onChange={(e) =>
-            setFormData({ ...formData, address: e.target.value })
-          }
-          placeholder="Enter company address"
-          rows={3}
-        />
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="isActive"
-          checked={formData.isActive}
-          onCheckedChange={(checked) =>
-            setFormData({ ...formData, isActive: checked })
-          }
-        />
-        <Label htmlFor="isActive">Active Company</Label>
-      </div>
-
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onClose} type="button">
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading
-            ? "Saving..."
-            : company
-            ? "Update Company"
-            : "Create Company"}
-        </Button>
-      </div>
-    </form>
   );
 }

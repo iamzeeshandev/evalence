@@ -1,5 +1,5 @@
 import { appApi } from "@/services/rtk-base-api-service";
-import { Company, CompanyPayload } from "./company-type";
+import { Company, CompanyPayload, UpdateCompanyPayload } from "./company-type";
 
 const companyApi = appApi
   .enhanceEndpoints({
@@ -31,8 +31,8 @@ const companyApi = appApi
         invalidatesTags: [{ type: "Company", id: "save-company" }],
       }),
       updateCompany: build.mutation<
-        CompanyPayload,
-        { id: string; data: CompanyPayload }
+        UpdateCompanyPayload,
+        { id: string; data: UpdateCompanyPayload }
       >({
         query: ({ id, data }) => ({
           url: `/companies/${id}`,

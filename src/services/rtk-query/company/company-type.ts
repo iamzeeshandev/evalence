@@ -1,8 +1,11 @@
 export interface Company {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  phone: string;
+  role: string;
+  companyName: string;
+  companyPhone: string;
   address: string;
   city: string;
   state: string;
@@ -18,10 +21,20 @@ export interface Company {
 }
 
 export type CompanyPayload = {
-  id?: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  phone: string;
-  address: string;
-  isActive: boolean;
+  password: string;
+  role: string;
+  companyName: string;
+  companyPhone: string;
+};
+
+export type UpdateCompanyPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  companyName: string;
+  companyPhone: string;
 };
