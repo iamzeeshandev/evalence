@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 interface TableDateFilterProps {
   title?: string;
   value?: Date | Date[] | { from: Date; to: Date };
+  allowReset?: boolean;
   mode?: 'single' | 'multiple' | 'range';
   onValueChange?: (value: Date | Date[] | { from: Date; to: Date } | undefined) => void;
 }
@@ -32,6 +33,7 @@ const isSingleDate = (value: any): value is Date => {
 export function TableDateFilter({
   title,
   value,
+  allowReset,
   onValueChange,
   mode = 'single',
 }: TableDateFilterProps) {
@@ -150,7 +152,7 @@ export function TableDateFilter({
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             <span className="truncate">{hasValue() ? formatDateValue() : title}</span>
-            {hasValue() && (
+            {hasValue() && allowReset !== false && (
               <div className="ml-2 h-3 w-3 opacity-0 group-hover:opacity-70" onClick={handleClear}>
                 <X className="h-3 w-3" />
               </div>

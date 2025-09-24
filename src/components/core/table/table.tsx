@@ -90,23 +90,8 @@ export default function Table<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
   });
 
-  // Show shimmer effect for a smoother transition
-  // const [showShimmer, setShowShimmer] = React.useState(false);
-
-  // React.useEffect(() => {
-  //   if (loading) {
-  //     setShowShimmer(true);
-  //     const timer = setTimeout(() => setShowShimmer(false), 1000);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [loading]);
-
   return (
     <Card className="relative overflow-hidden border border-gray-100 shadow-lg">
-      {/* {showShimmer && (
-        <div className="animate-shimmer absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-      )} */}
-
       <CardContent className="rounded-2xl p-0 pt-4">
         {heading && (
           <h1 className={cn('px-4 text-xl font-medium', heading ? 'mb-4' : 'mb-0')}>{heading}</h1>

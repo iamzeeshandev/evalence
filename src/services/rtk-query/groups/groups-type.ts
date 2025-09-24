@@ -1,9 +1,3 @@
-export enum UserRole {
-  ADMIN = "admin",
-  COMPANY_ADMIN = "company_admin",
-  EMPLOYEE = "employee",
-}
-
 export interface Company {
   id: string;
   name: string;
@@ -24,41 +18,47 @@ export interface Company {
   updatedAt: string;
 }
 
-export interface User {
+export interface GroupUser {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-  role: UserRole;
+  role: string;
   phone?: string;
   isActive: boolean;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  users: GroupUser[];
   company?: Company;
 }
 
-export interface UserDropdown {
+export interface GroupDropdown {
   id: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
+  name: string;
 }
 
-export interface UserPayload {
-  id?: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  role: UserRole;
-  phone?: string;
+export interface GroupPayload {
+  name: string;
+  description?: string;
+  isActive: boolean;
+  userIds: string[];
   companyId?: string;
 }
 
-export type UserResponse = User
+export type GroupResponse = Group
 
-export type UserListResponse = User[];
-export type UserDropdownResponse = UserDropdown[];
+export type GroupListResponse = Group[];
+export type GroupDropdownResponse = GroupDropdown[];

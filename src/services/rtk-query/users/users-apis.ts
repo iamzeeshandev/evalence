@@ -1,53 +1,86 @@
 import { appApi } from "@/services/rtk-base-api-service";
-import { User } from "./users-type";
+import {
+  UserPayload,
+  UserResponse,
+  UserListResponse,
+  UserDropdownResponse,
+} from "./users-type";
 
-const userApi = appApi
+const usersApi = appApi
   .enhanceEndpoints({
-    addTagTypes: ["User"],
+    addTagTypes: ["Users"],
   })
   .injectEndpoints({
     endpoints: (build) => ({
-      getAllUsers: build.query<User[], void>({
-        providesTags: [{ type: "User", id: "all-users" }],
-        query: () => ({
-          url: `/users`,
-          method: "GET",
-        }),
-      }),
-      getAllUsersDropdown: build.query<User[], void>({
-        providesTags: [{ type: "User", id: "all-users" }],
-        query: () => ({
-          url: `/users/dropdown/users`,
-          method: "GET",
-        }),
-      }),
-      userById: build.query<User, string | undefined>({
-        providesTags: [{ type: "User", id: "user" }],
+      getUserById: build.query<UserResponse, string>({
         query: (id) => ({
           url: `/users/${id}`,
           method: "GET",
         }),
+        providesTags: (result, error, id) => [{ type: "Users", id }],
       }),
-      saveUser: build.mutation<User, any>({
+      getAllUsers: build.query<UserListResponse, void>({
+        query: () => ({
+          url: `/users/list`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "Users", id: "users-list" }],
+      }),
+      getUsersDropdown: build.query<UserDropdownResponse, void>({
+        query: () => ({
+          url: `/users/dropdown`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "Users", id: "users-dropdown" }],
+      }),
+      getUsersByCompany: build.query<UserListResponse, string>({
+        query: (companyId) => ({
+          url: `/users/company/${companyId}`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "Users", id: "users-list" }],
+      }),
+      saveUser: build.mutation<UserResponse, UserPayload>({
         query: (payload) => ({
-          url: `/users`,
+          url: `/users/save`,
           method: "POST",
           body: payload,
         }),
-        invalidatesTags: [{ type: "User", id: "save-user" }],
+        invalidatesTags: [
+          { type: "Users", id: "users-list" },
+          { type: "Users", id: "users-dropdown" },
+        ],
       }),
-      loginUser: build.mutation<User, { email: string; password: string }>({
-        query: (payload) => ({
-          url: `/users/login`,
-          method: "POST",
+      updateUser: build.mutation<UserResponse, UserPayload>({
+        query: ({ id, ...payload }) => ({
+          url: `/users/${id}`,
+          method: "PUT",
           body: payload,
         }),
+        invalidatesTags: () => [
+          { type: "Users", id: "users-list" },
+          { type: "Users", id: "users-dropdown" },
+        ],
+      }),
+      deleteUser: build.mutation<{ id: string }, string>({
+        query: (id) => ({
+          url: `/users/${id}`,
+          method: "DELETE",
+        }),
+        invalidatesTags: () => [
+          { type: "Users", id: "users-list" },
+          { type: "Users", id: "users-dropdown" },
+        ],
       }),
     }),
   });
 
 export const {
+  useGetUserByIdQuery,
   useGetAllUsersQuery,
-  useLoginUserMutation,
-  useGetAllUsersDropdownQuery,
-} = userApi;
+  useGetUsersDropdownQuery,
+  useGetUsersByCompanyQuery,
+  useSaveUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} = usersApi;

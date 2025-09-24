@@ -50,7 +50,7 @@ export function TableFacetedFilter({
       {title && <Label className="text-sm font-medium text-gray-700">{title}</Label>}{' '}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 border-dashed">
+          <Button variant="outline" size="sm" className="text-muted-foreground h-8 border-dashed">
             <PlusCircle className="mr-2 h-4 w-4" />
             {title}
             {selectedValues.size > 0 && (

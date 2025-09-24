@@ -1,5 +1,9 @@
 import { appApi } from "@/services/rtk-base-api-service";
-import { Company, CompanyPayload, UpdateCompanyPayload } from "./company-type";
+import {
+  CompanyPayload,
+  CompanyResponse,
+  CompanyListResponse,
+} from "./company-type";
 
 const companyApi = appApi
   .enhanceEndpoints({
@@ -7,52 +11,63 @@ const companyApi = appApi
   })
   .injectEndpoints({
     endpoints: (build) => ({
-      getAllCompanies: build.query<Company[], void>({
-        providesTags: [{ type: "Company", id: "all-companies" }],
-        query: () => ({
-          url: `/companies`,
-          method: "GET",
-        }),
-      }),
-      companyById: build.query<Company, string | undefined>({
-        providesTags: [{ type: "Company", id: "company" }],
+      getCompanyById: build.query<CompanyResponse, string>({
         query: (id) => ({
           url: `/companies/${id}`,
           method: "GET",
         }),
+        providesTags: (_result, _error, id) => [{ type: "Company", id }],
       }),
-
-      saveCompany: build.mutation<CompanyPayload, any>({
+      getAllCompanies: build.query<CompanyListResponse, void>({
+        query: () => ({
+          url: `/companies/list`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "Company", id: "companies-list" }],
+      }),
+      getCompaniesDropdown: build.query<CompanyListResponse, void>({
+        query: () => ({
+          url: `/companies/dropdown/list`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "Company", id: "companies-dropdown" }],
+      }),
+      saveCompany: build.mutation<CompanyResponse, CompanyPayload>({
         query: (payload) => ({
           url: `/companies`,
           method: "POST",
           body: payload,
         }),
-        invalidatesTags: [{ type: "Company", id: "save-company" }],
+        invalidatesTags: [{ type: "Company", id: "companies-list" }],
       }),
-      updateCompany: build.mutation<
-        UpdateCompanyPayload,
-        { id: string; data: UpdateCompanyPayload }
-      >({
-        query: ({ id, data }) => ({
-          url: `/companies/${id}`,
+      updateCompany: build.mutation<CompanyResponse, CompanyPayload>({
+        query: ({ id, ...payload }) => ({
+          url: `/companies/update/${id}`,
           method: "PUT",
-          body: data,
+          body: payload,
         }),
-        invalidatesTags: [{ type: "Company", id: "update-company" }],
+        invalidatesTags: () => [
+          { type: "Company", id: "companies-list" },
+          { type: "Company", id: "companies-dropdown" },
+        ],
       }),
       deleteCompany: build.mutation<{ id: string }, string>({
         query: (id) => ({
           url: `/companies/${id}`,
           method: "DELETE",
         }),
-        invalidatesTags: [{ type: "Company", id: "delete-company" }],
+        invalidatesTags: () => [
+          { type: "Company", id: "companies-list" },
+          { type: "Company", id: "companies-dropdown" },
+        ],
       }),
     }),
   });
 
 export const {
+  useGetCompanyByIdQuery,
   useGetAllCompaniesQuery,
+  useGetCompaniesDropdownQuery,
   useSaveCompanyMutation,
   useUpdateCompanyMutation,
   useDeleteCompanyMutation,

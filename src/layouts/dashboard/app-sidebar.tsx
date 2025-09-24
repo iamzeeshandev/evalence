@@ -38,17 +38,26 @@ const data = {
       url: "/result",
     },
     {
+      title: "Battery",
+      url: "/battery",
+    },
+    {
       title: "Company Management",
       url: "/company-management",
       items: [
         {
           title: "Companies",
-          url: "/company",
+          url: "/company-management/companies",
           disabled: false,
         },
         {
           title: "Users",
           url: "/company-management/users",
+          disabled: false,
+        },
+        {
+          title: "Groups",
+          url: "/company-management/groups",
           disabled: false,
         },
       ],

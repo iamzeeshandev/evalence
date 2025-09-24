@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label';
 
 export type CalendarMode = 'single' | 'multiple' | 'range';
 export type ToolbarFilter = {
+  allowReset?: boolean;
   type: string | 'search' | 'select' | 'date' | 'custom';
   columnId: string;
   placeholder?: string;
@@ -153,6 +154,7 @@ export function TableToolbar<TData>({
                       <TableDateFilter
                         key={filter.columnId}
                         title={filter.title}
+                        allowReset={filter.allowReset}
                         mode={filter.mode || 'single'}
                         value={value}
                         onValueChange={value => tableState?.setFilter(filter.columnId, value)}

@@ -111,7 +111,7 @@ export function TableNestedSelectFilter({
       {title && <Label className="text-sm font-medium text-gray-700">{title}</Label>}{' '}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className={cn('h-8 justify-between', className)}>
+          <Button variant="outline" size="sm" className={cn('h-8 justify-between text-muted-foreground', className)}>
             <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
