@@ -32,7 +32,9 @@ import { TestCreationForm } from "./test-creation-form";
 import { TestTakingInterface } from "./test-taking-interface-view";
 
 export function TestDashboard() {
-  const { user } = useAuth();
+  const {
+    authData: { user },
+  } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedTest, setSelectedTest] = useState<any>(null);

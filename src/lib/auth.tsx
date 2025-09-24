@@ -1,49 +1,103 @@
 "use client";
 
-import { User } from "@/services/rtk-query/users/users-type";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
-interface AuthContextType {
+interface Company {
+  id: string;
+  name: string;
+  industry: string;
+}
+
+interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  phone: string;
+  isActive: boolean;
+}
+interface AuthData {
   user: User | null;
-  login: (userData: User) => void;
+  token: string;
+  refreshToken: string;
+  company: Company | null;
+  expiresIn: string;
+}
+
+interface AuthContextType {
+  authData: AuthData;
+  login: (authResponse: any) => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const initialAuthData: AuthData = {
+  user: null,
+  token: "",
+  refreshToken: "",
+  company: null,
+  expiresIn: "",
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [authData, setAuthData] = useState<AuthData>(initialAuthData);
   const router = useRouter();
 
   useEffect(() => {
-    // Check for stored user data on mount
-    const storedUser = sessionStorage.getItem("evalence_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // Check for stored auth data on mount
+    const storedAuthData = sessionStorage.getItem("evalence_user");
+    if (storedAuthData) {
+      setAuthData(JSON.parse(storedAuthData));
     }
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
+  const login = (authResponse: any) => {
+    const newAuthData: AuthData = {
+      user: authResponse.user
+        ? {
+            id: authResponse.user.id || "",
+            firstName: authResponse.user.firstName || "",
+            lastName: authResponse.user.lastName || "",
+            email: authResponse.user.email || "",
+            role: authResponse.user.role || "",
+            phone: authResponse.user.phone || "",
+            isActive: authResponse.user.isActive || false,
+          }
+        : null,
+      token: authResponse.accessToken || "",
+      refreshToken: authResponse.refreshToken || "",
+      company: authResponse.company
+        ? {
+            id: authResponse.company.id || "",
+            name: authResponse.company.name || "",
+            industry: authResponse.company.industry || "",
+          }
+        : null,
+      expiresIn: authResponse.expiresIn || "",
+    };
+
+    setAuthData(newAuthData);
+    sessionStorage.setItem("evalence_user", JSON.stringify(newAuthData));
     router.push("/test");
-    sessionStorage.setItem("evalence_user", JSON.stringify(userData));
   };
 
   const logout = () => {
-    setUser(null);
+    setAuthData(initialAuthData);
     sessionStorage.removeItem("evalence_user");
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        authData,
         login,
         logout,
-        isAuthenticated: !!user,
+        isAuthenticated: !!authData.token,
       }}
     >
       {children}
@@ -58,3 +112,25 @@ export function useAuth() {
   }
   return context;
 }
+
+export const getStoredAuthData = () => {
+  try {
+    const storedData = sessionStorage.getItem("evalence_user");
+    if (!storedData) return null;
+
+    return JSON.parse(storedData);
+  } catch (error) {
+    console.error("Error parsing stored auth data:", error);
+    return null;
+  }
+};
+
+export const getStoredToken = (): string | null => {
+  const authData = getStoredAuthData();
+  return authData?.token || null;
+};
+
+export const getStoredUser = () => {
+  const authData = getStoredAuthData();
+  return authData?.user || null;
+};

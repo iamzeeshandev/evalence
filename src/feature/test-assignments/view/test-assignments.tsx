@@ -62,7 +62,9 @@ import {
 import { useState } from "react";
 
 export function TestAssignmentSystem() {
-  const { user } = useAuth();
+  const {
+    authData: { user, company },
+  } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCompany, setSelectedCompany] = useState<string>("all"); // Updated default value
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
@@ -83,15 +85,15 @@ export function TestAssignmentSystem() {
     });
 
   const { data: companyAssignments, isLoading: isLoadingCompanyAssignments } =
-    useGetTestAssignmentByCompanyIdQuery(user?.company.id || "", {
-      skip: user?.role !== "company_admin" || !user?.company.id,
+    useGetTestAssignmentByCompanyIdQuery(company?.id || "", {
+      skip: user?.role !== "company_admin" || !company?.id,
     });
 
   const { data: userAssignments, isLoading: isLoadingUserAssignments } =
     useGetUserTestAssignmentByCompanyIdQuery(
-      { companyId: user?.company.id || "", userId: user?.id || "" },
+      { companyId: company?.id || "", userId: user?.id || "" },
       {
-        skip: user?.role !== "employee" || !user?.company.id || !user?.id,
+        skip: user?.role !== "employee" || !company?.id || !user?.id,
       }
     );
 
@@ -287,9 +289,9 @@ export function TestAssignmentSystem() {
                               {company.name}
                             </SelectItem>
                           ))
-                        : user?.company.id && (
-                            <SelectItem value={user.company.id}>
-                              {companies?.find((c) => c.id === user.company.id)
+                        : company?.id && (
+                            <SelectItem value={company?.id}>
+                              {companies?.find((c) => c.id === company?.id)
                                 ?.name || "Your Company"}
                             </SelectItem>
                           )}

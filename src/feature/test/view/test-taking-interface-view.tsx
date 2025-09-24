@@ -23,7 +23,9 @@ export function TestTakingInterface({
   test,
   onClose,
 }: TestTakingInterfaceProps) {
-  const { user } = useAuth();
+  const {
+    authData: { user },
+  } = useAuth();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string | string[]>>({});
   const [timeSpent, setTimeSpent] = useState(0);

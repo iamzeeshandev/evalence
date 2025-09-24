@@ -34,7 +34,9 @@ export function TestTakingInterface({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
-  const { user } = useAuth();
+  const {
+    authData: { user },
+  } = useAuth();
 
   const [saveTestAttempt] = useSubmitTestAttemptMutation();
 

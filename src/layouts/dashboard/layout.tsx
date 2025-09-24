@@ -1,12 +1,6 @@
 "use client";
 
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { AppSidebar } from "./app-sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,25 +9,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { Separator } from "@/components/ui/separator";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth";
+import { useRouter } from "next/navigation";
+import { AppSidebar } from "./app-sidebar";
 
 export type DashboardLayoutProps = {
   children: React.ReactNode;
 };
 
-const user = {
-  name: "Zeeshan",
-  email: "zeeshan@example.com",
-  avatar: "/avatar.png",
-};
-
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
-  const { user: loggedUser } = useAuth();
+  const {
+    authData: { user: loggedUser },
+    logout,
+  } = useAuth();
 
   const handleLogout = () => {
+    logout();
     router.push("/auth/sign-in");
   };
 
@@ -52,7 +50,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="flex items-center gap-2 cursor-pointer">
                 <Avatar className="h-10 w-10">
                   <AvatarImage
-                    src={user.avatar}
+                    src="/avatar.png"
                     alt={`${loggedUser?.firstName} ${loggedUser?.lastName}`}
                   />
                   <AvatarFallback>
