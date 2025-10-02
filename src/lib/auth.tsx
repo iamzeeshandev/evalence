@@ -21,7 +21,7 @@ interface User {
 }
 interface AuthData {
   user: User | null;
-  token: string;
+  accessToken: string;
   refreshToken: string;
   company: Company | null;
   expiresIn: string;
@@ -38,7 +38,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const initialAuthData: AuthData = {
   user: null,
-  token: "",
+  accessToken: "",
   refreshToken: "",
   company: null,
   expiresIn: "",
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for stored auth data on mount
-    const storedAuthData = sessionStorage.getItem("evalence_user");
+    const storedAuthData = localStorage.getItem("evalence_user");
     if (storedAuthData) {
       setAuthData(JSON.parse(storedAuthData));
     }
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             isActive: authResponse.user.isActive || false,
           }
         : null,
-      token: authResponse.accessToken || "",
+      accessToken: authResponse.accessToken || "",
       refreshToken: authResponse.refreshToken || "",
       company: authResponse.company
         ? {
@@ -82,13 +82,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     setAuthData(newAuthData);
-    sessionStorage.setItem("evalence_user", JSON.stringify(newAuthData));
+    localStorage.setItem("evalence_user", JSON.stringify(newAuthData));
     router.push("/test");
   };
 
   const logout = () => {
     setAuthData(initialAuthData);
-    sessionStorage.removeItem("evalence_user");
+    localStorage.removeItem("evalence_user");
   };
 
   return (
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authData,
         login,
         logout,
-        isAuthenticated: !!authData.token,
+        isAuthenticated: !!authData.accessToken,
       }}
     >
       {children}
@@ -115,7 +115,7 @@ export function useAuth() {
 
 export const getStoredAuthData = () => {
   try {
-    const storedData = sessionStorage.getItem("evalence_user");
+    const storedData = localStorage.getItem("evalence_user");
     if (!storedData) return null;
 
     return JSON.parse(storedData);
@@ -127,7 +127,7 @@ export const getStoredAuthData = () => {
 
 export const getStoredToken = (): string | null => {
   const authData = getStoredAuthData();
-  return authData?.token || null;
+  return authData?.accessToken || null;
 };
 
 export const getStoredUser = () => {
