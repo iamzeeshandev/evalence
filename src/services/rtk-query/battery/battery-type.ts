@@ -10,6 +10,16 @@ export interface Test {
   updatedAt: string;
 }
 
+export interface BatteryTest {
+  id: string;
+  batteryId: string;
+  testId: string;
+  weight: string;
+  createdAt: string;
+  updatedAt: string;
+  test: Test;
+}
+
 export interface Battery {
   id: string;
   name: string;
@@ -17,7 +27,7 @@ export interface Battery {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  tests: Test[];
+  batteryTests: BatteryTest[];
 }
 
 export interface BatteryDropdown {
@@ -25,11 +35,16 @@ export interface BatteryDropdown {
   name: string;
 }
 
+export interface BatteryTestPayload {
+  testId: string;
+  weight: number;
+}
+
 export interface BatteryPayload {
   name: string;
   description?: string;
   isActive: boolean;
-  testIds: string[];
+  tests: BatteryTestPayload[];
 }
 
 export type BatteryResponse = Battery

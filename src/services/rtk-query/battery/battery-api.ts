@@ -1,5 +1,5 @@
 import { appApi } from "@/services/rtk-base-api-service";
-import { BatteryPayload, BatteryResponse, BatteryListResponse, BatteryDropdownResponse } from "./battery-type";
+import { BatteryPayload, BatteryResponse, BatteryListResponse, BatteryDropdownResponse, BatteryTestPayload } from "./battery-type";
 
 const batteryApi = appApi
   .enhanceEndpoints({
@@ -59,6 +59,48 @@ const batteryApi = appApi
           { type: "Battery", id: "battery-dropdown" },
         ],
       }),
+      assignBatteryToGroups: build.mutation<
+        BatteryResponse,
+        { id: string; groupIds: string[] }
+      >({
+        query: ({ id, groupIds }) => ({
+          url: `/batteries/${id}/groups`,
+          method: "PUT",
+          body: { groupIds },
+        }),
+        invalidatesTags: (_result, _error, { id }) => [
+          { type: "Battery", id },
+          { type: "Battery", id: "battery-list" },
+        ],
+      }),
+      addTestsToBattery: build.mutation<
+        BatteryResponse,
+        { id: string; tests: BatteryTestPayload[] }
+      >({
+        query: ({ id, tests }) => ({
+          url: `/batteries/${id}/tests/add`,
+          method: "PATCH",
+          body: { tests },
+        }),
+        invalidatesTags: (_result, _error, { id }) => [
+          { type: "Battery", id },
+          { type: "Battery", id: "battery-list" },
+        ],
+      }),
+      removeTestsFromBattery: build.mutation<
+        BatteryResponse,
+        { id: string; tests: BatteryTestPayload[] }
+      >({
+        query: ({ id, tests }) => ({
+          url: `/batteries/${id}/tests/remove`,
+          method: "PATCH",
+          body: { tests },
+        }),
+        invalidatesTags: (_result, _error, { id }) => [
+          { type: "Battery", id },
+          { type: "Battery", id: "battery-list" },
+        ],
+      }),
     }),
   });
 
@@ -69,4 +111,7 @@ export const {
   useSaveBatteryMutation,
   useUpdateBatteryMutation,
   useDeleteBatteryMutation,
+  useAssignBatteryToGroupsMutation,
+  useAddTestsToBatteryMutation,
+  useRemoveTestsFromBatteryMutation,
 } = batteryApi;

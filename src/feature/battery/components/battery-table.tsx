@@ -7,7 +7,7 @@ import { useGetAllBatteriesQuery, useDeleteBatteryMutation } from "@/services/rt
 import { Battery } from "@/services/rtk-query/battery/battery-type";
 import { formatDate } from "@/lib/date-utils";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Edit, Trash2, Plus, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -22,6 +22,10 @@ export function BatteryTable() {
 
   const handleEdit = (id: string) => {
     router.push(`/battery/edit/${id}`);
+  };
+
+  const handleView = (id: string) => {
+    router.push(`/battery/view/${id}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -67,7 +71,7 @@ export function BatteryTable() {
         </span>
       ),
     }),
-    columnHelper.accessor("tests", {
+    columnHelper.accessor("batteryTests", {
       header: "Tests Count",
       cell: ({ getValue }) => (
         <span className="text-muted-foreground">
@@ -90,6 +94,15 @@ export function BatteryTable() {
         const battery = row.original;
         return (
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleView(battery.id)}
+              title="View battery"
+              className="h-8 w-8 text-gray-600 hover:bg-gray-50 hover:text-gray-700"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
