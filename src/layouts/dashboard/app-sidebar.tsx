@@ -18,6 +18,10 @@ const data = {
   },
   navMain: [
     {
+      title: "Take Test",
+      url: "/take-test",
+    },
+    {
       title: "Assessment center",
       url: "/",
       items: [

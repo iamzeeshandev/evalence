@@ -46,10 +46,7 @@ export function TestDashboard() {
   const { data: testAttemptsCount } = useGetTestAttemptsCountQuery();
   const [testAttemptMut, testAttemptMutState] = useStartTestAttemptMutation();
 
-  const isLoading =
-    user?.role === "super_admin"
-      ? isLoadingAll
-      : user?.role === "company_admin";
+  const isLoading = isLoadingAll;
 
   let testsData = [];
   testsData = allTestsData || [];
