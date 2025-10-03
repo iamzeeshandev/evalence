@@ -1,0 +1,440 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Form } from "@/components/ui/form";
+import {
+  useSaveTestMutation,
+  useUpdateTestMutation,
+} from "@/services/rtk-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FileText, List, Loader2, PlusCircle, Save } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { TestBasicInfoForm } from "./assessment-basic-info-form";
+import { QuestionCreationForm } from "./assessment-question-creation-form";
+import { QuestionsListView } from "./assessment-questions-list-view";
+
+const testSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Assessment title is required")
+    .min(3, "Title must be at least 3 characters"),
+  description: z
+    .string()
+    .min(0, { message: "Description is required" })
+    .min(1, { message: "Description must be at least 20 characters" }),
+  isActive: z.boolean(),
+  duration: z.number().min(1, "Duration must be at least 1 minute"),
+  questions: z
+    .array(
+      z.object({
+        text: z.string().min(1, "Question text is required"),
+        type: z.literal("single"),
+        points: z.number().min(1, "Points must be at least 1"),
+        questionNo: z.number(),
+        imageUrl: z.string().optional(),
+        options: z
+          .array(
+            z.object({
+              text: z.string().min(1, "Option text is required"),
+              isCorrect: z.boolean(),
+            })
+          )
+          .min(2, "At least 2 options are required"),
+      })
+    )
+    .min(1, "At least one question is required"),
+
+  currentQuestion: z.object({
+    text: z.string(),
+    type: z.literal("single"),
+    points: z.number(),
+    imageUrl: z.string().optional(),
+    options: z.array(
+      z.object({
+        text: z.string(),
+        isCorrect: z.boolean(),
+      })
+    ),
+  }),
+});
+
+type TestFormData = z.infer<typeof testSchema>;
+
+interface TestCreationFormProps {
+  testData?: any;
+  isEditing?: boolean;
+  testId?: string;
+}
+
+export function TestCreationForm({
+  testData: initialTestData,
+  isEditing = false,
+  testId,
+}: TestCreationFormProps) {
+  const router = useRouter();
+  const [editingQuestionIndex, setEditingQuestionIndex] = useState<
+    number | null
+  >(null);
+
+  const [saveTestMutation, { isLoading: isSaving }] = useSaveTestMutation();
+  const [updateTestMutation, { isLoading: isUpdating }] =
+    useUpdateTestMutation();
+
+  const form = useForm<TestFormData>({
+    resolver: zodResolver(testSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      isActive: true,
+      duration: 60,
+      questions: [],
+      currentQuestion: {
+        text: "",
+        type: "single",
+        points: 5,
+        imageUrl: "",
+        options: [
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
+        ],
+      },
+    },
+  });
+
+  useEffect(() => {
+    if (isEditing && initialTestData) {
+      form.reset({
+        title: initialTestData.title,
+        description: initialTestData.description || "",
+        isActive: initialTestData.isActive,
+        duration: initialTestData.duration,
+        questions: initialTestData.questions || [],
+        currentQuestion: {
+          text: "",
+          type: "single",
+          points: 5,
+          imageUrl: "",
+          options: [
+            { text: "", isCorrect: false },
+            { text: "", isCorrect: false },
+            { text: "", isCorrect: false },
+            { text: "", isCorrect: false },
+          ],
+        },
+      });
+    }
+  }, [isEditing, initialTestData, form]);
+
+  const questions = form.watch("questions");
+
+  const handleAddQuestion = () => {
+    const questions = form.getValues("questions");
+    const currentQuestionData = form.getValues("currentQuestion");
+
+    // Validate current question
+    if (!currentQuestionData.text.trim()) {
+      form.setError("currentQuestion.text", {
+        message: "Question text is required",
+      });
+      return;
+    }
+
+    const options = currentQuestionData.options;
+
+    // Check each option
+    let hasEmpty = false;
+    options.forEach((opt, index) => {
+      if (!opt.text.trim()) {
+        hasEmpty = true;
+        form.setError(`currentQuestion.options.${index}.text`, {
+          type: "manual",
+          message: "Option text is required",
+        });
+      }
+    });
+
+    if (hasEmpty) return;
+
+    if (editingQuestionIndex !== null) {
+      const updatedQuestions = [...questions];
+      updatedQuestions[editingQuestionIndex] = {
+        ...currentQuestionData,
+        questionNo: editingQuestionIndex + 1,
+      };
+      form.setValue("questions", updatedQuestions);
+      setEditingQuestionIndex(null);
+    } else {
+      // Add new question
+      const newQuestion = {
+        ...currentQuestionData,
+        questionNo: questions.length + 1,
+      };
+      form.setValue("questions", [...questions, newQuestion]);
+    }
+
+    // Reset current question
+    form.setValue("currentQuestion", {
+      text: "",
+      type: "single",
+      points: 5,
+      imageUrl: "",
+      options: [
+        { text: "", isCorrect: false },
+        { text: "", isCorrect: false },
+        { text: "", isCorrect: false },
+        { text: "", isCorrect: false },
+      ],
+    });
+  };
+
+  const handleEditQuestion = (questionNumber: number) => {
+    const questionToEdit = questions.find(
+      (q) => q.questionNo === questionNumber
+    );
+    if (questionToEdit) {
+      form.setValue("currentQuestion", questionToEdit);
+      setEditingQuestionIndex(questionNumber - 1);
+    }
+  };
+
+  const handleDeleteQuestion = (questionNumber: number) => {
+    const updatedQuestions = questions
+      .filter((q) => q.questionNo !== questionNumber)
+      .map((q, index) => ({
+        ...q,
+        questionNo: index + 1,
+      }));
+
+    form.setValue("questions", updatedQuestions);
+
+    // If we're editing the deleted question, cancel edit mode
+    if (editingQuestionIndex === questionNumber - 1) {
+      setEditingQuestionIndex(null);
+      form.setValue("currentQuestion", {
+        text: "",
+        type: "single",
+        points: 5,
+        imageUrl: "",
+        options: [
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
+        ],
+      });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingQuestionIndex(null);
+    form.setValue("currentQuestion", {
+      text: "",
+      type: "single",
+      points: 5,
+      imageUrl: "",
+      options: [
+        { text: "", isCorrect: false },
+        { text: "", isCorrect: false },
+        { text: "", isCorrect: false },
+        { text: "", isCorrect: false },
+      ],
+    });
+  };
+
+  const onSubmit = async (data: TestFormData) => {
+    try {
+      const payload = {
+        title: data.title,
+        description: data.description,
+        isActive: data.isActive,
+        duration: data.duration,
+        questions: data.questions,
+      };
+
+      if (isEditing && testId) {
+        const res = await updateTestMutation({ id: testId, payload }).unwrap();
+        if (res) router.push(`/test`);
+      } else {
+        const res = await saveTestMutation(payload).unwrap();
+        if (res) router.push(`/test`);
+      }
+
+      // onClose();
+    } catch (err: any) {
+      console.error(
+        `Failed to ${isEditing ? "update" : "create"} test:`,
+        err?.data?.message || "An error occurred"
+      );
+    }
+  };
+
+  const isLoading = isSaving || isUpdating;
+
+  return (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
+      >
+        {/* Header */}
+        <div className="lg:col-span-3">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isEditing ? "Edit Test" : "Create Test"}
+            </h1>
+          </div>
+          <p className="text-gray-600 ml-4">
+            {isEditing
+              ? "Update your assessment details and questions"
+              : "Build a new assessment with multiple choice questions"}
+          </p>
+        </div>
+
+        {/* Left Column: Assessment + Question Creation */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Test Basic Information */}
+          <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl text-gray-900">
+                    {isEditing
+                      ? "Edit Assessment Information"
+                      : "Assessment Information"}
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Basic details about the assessment
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <TestBasicInfoForm />
+            </CardContent>
+          </Card>
+
+          {/* Question Creation */}
+          <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-50 rounded-lg">
+                  <PlusCircle className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl text-gray-900">
+                    {editingQuestionIndex !== null
+                      ? `Edit Question ${editingQuestionIndex + 1}`
+                      : `Add Question ${questions.length + 1}`}
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Create multiple choice questions
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <QuestionCreationForm
+                onAddQuestion={handleAddQuestion}
+                isEditing={editingQuestionIndex !== null}
+                onCancelEdit={handleCancelEdit}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button
+              variant="outline"
+              type="button"
+              className="min-w-24 border-gray-300 text-gray-700 hover:bg-gray-50"
+              onClick={() => router.push("/test")}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading || questions.length === 0}
+              className="min-w-40 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500"
+            >
+              {isLoading ? (
+                <div className="flex items-center">
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {isEditing ? "Updating..." : "Creating..."}
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <Save className="h-4 w-4 mr-2" />
+                  {isEditing ? "Update Assessment" : "Save Assessment"}
+                </div>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Right Column: Questions List - Always Visible */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-20">
+            <Card className="shadow-sm border-gray-200 h-full flex flex-col">
+              <CardHeader className="pb-4 border-b">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-purple-50 rounded-lg">
+                    <List className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl text-gray-900">
+                      Questions ({questions.length})
+                    </CardTitle>
+                    <CardDescription className="text-gray-600">
+                      {questions.length === 0
+                        ? "No questions added yet"
+                        : "Review and manage added questions"}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 p-0">
+                {questions.length > 0 ? (
+                  <div>
+                    <QuestionsListView
+                      questions={questions}
+                      onEditQuestion={handleEditQuestion}
+                      onDeleteQuestion={handleDeleteQuestion}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48 text-center p-6">
+                    <div className="p-3 bg-gray-100 rounded-full mb-3">
+                      <List className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 font-medium mb-1">
+                      No questions yet
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      Questions you add will appear here for easy management
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </form>
+    </Form>
+  );
+}

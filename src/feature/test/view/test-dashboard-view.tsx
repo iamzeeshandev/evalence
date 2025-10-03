@@ -14,7 +14,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
@@ -25,16 +24,18 @@ import {
 } from "@/services/rtk-query/test-attempt/test-attempt-api";
 import { TestResponse } from "@/services/rtk-query/tests/tests-type";
 import { Clock, Edit, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SearchFilter } from "../components/search-filter";
 import { TestStatistics } from "../components/test-statistics";
-import { TestCreationForm } from "./test-creation-form";
 import { TestTakingInterface } from "./test-taking-interface-view";
 
 export function TestDashboard() {
   const {
     authData: { user },
   } = useAuth();
+
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedTest, setSelectedTest] = useState<any>(null);
@@ -103,7 +104,10 @@ export function TestDashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+        // onClick={() => router.push(`/test/add/`)}
+      >
         <div>
           <h1 className="text-3xl font-bold text-foreground">
             {headerText.title}
@@ -111,20 +115,13 @@ export function TestDashboard() {
           <p className="text-muted-foreground">{headerText.description}</p>
         </div>
         {
-          <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Create New Instrument
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Assessment</DialogTitle>
-              </DialogHeader>
-              <TestCreationForm onClose={() => setShowCreateForm(false)} />
-            </DialogContent>
-          </Dialog>
+          <Button
+            className="flex items-center gap-2"
+            onClick={() => router.push(`/test/add/`)}
+          >
+            <Plus className="h-4 w-4" />
+            Create New Instrument
+          </Button>
         }
       </div>
 
@@ -342,7 +339,8 @@ export function TestDashboard() {
                                 size="sm"
                                 onClick={() => {
                                   setSelectedTest(test);
-                                  setShowEditForm(true);
+
+                                  router.push(`/test/edit/${selectedTest?.id}`);
                                 }}
                               >
                                 <Edit className="h-4 w-4" />
@@ -367,14 +365,15 @@ export function TestDashboard() {
             <DialogHeader>
               <DialogTitle>Edit Test: {selectedTest?.title}</DialogTitle>
             </DialogHeader>
-            {selectedTest && (
-              <TestCreationForm
-                testData={selectedTest}
-                testId={selectedTest?.id}
-                isEditing={true}
-                onClose={() => setShowEditForm(false)}
-              />
-            )}
+            {
+              selectedTest && router.push(`/test/edit/${selectedTest?.id}`)
+              // <TestCreationForm
+              //   testData={selectedTest}
+              //   testId={selectedTest?.id}
+              //   isEditing={true}
+              //   onClose={() => setShowEditForm(false)}
+              // />
+            }
           </DialogContent>
         </Dialog>
       )}

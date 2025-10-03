@@ -1,5 +1,5 @@
 import { appApi } from "@/services/rtk-base-api-service";
-import { TestPayload, TestResponse, UserTestResponse } from "./tests-type";
+import { TestPayload, TestResponse } from "./tests-type";
 
 const testsApi = appApi
   .enhanceEndpoints({
@@ -37,7 +37,7 @@ const testsApi = appApi
       }),
       saveTest: build.mutation<TestResponse, TestPayload>({
         query: (payload) => ({
-          url: `/tests`,
+          url: `/tests/save`,
           method: "POST",
           body: payload,
         }),
@@ -48,7 +48,7 @@ const testsApi = appApi
         { id: string; payload: TestPayload }
       >({
         query: ({ id, payload }) => ({
-          url: `/tests/${id}`,
+          url: `/tests/update/${id}`,
           method: "PUT",
           body: payload,
         }),
