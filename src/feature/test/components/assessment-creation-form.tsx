@@ -14,7 +14,15 @@ import {
   useUpdateTestMutation,
 } from "@/services/rtk-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileText, List, Loader2, PlusCircle, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  List,
+  Loader2,
+  PlusCircle,
+  Save,
+} from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -286,105 +294,108 @@ export function TestCreationForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
+        className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-4 lg:gap-y-0 max-w-7xl mx-auto"
       >
         {/* Header */}
         <div className="lg:col-span-3">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-8 w-1 bg-blue-600 rounded-full"></div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {isEditing ? "Edit Test" : "Create Test"}
-            </h1>
+          <div className="mb-6">
+            <div className="flex items-center gap-4 mb-4">
+              <Link href="/test">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {isEditing ? "Update Test" : "Create New Test"}
+              </h1>
+            </div>
+
+            <p className="text-muted-foreground">
+              {isEditing
+                ? "Update your assessment details and questions"
+                : "Create a new assessment by filling in the details below"}
+            </p>
           </div>
-          <p className="text-gray-600 ml-4">
-            {isEditing
-              ? "Update your assessment details and questions"
-              : "Build a new assessment with multiple choice questions"}
-          </p>
         </div>
 
-        {/* Left Column: Assessment + Question Creation */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Test Basic Information */}
+        {/* Left Column: Assessment + Question Creation in single card */}
+        <div className="lg:col-span-2 mb-6">
           <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <FileText className="h-5 w-5 text-blue-600" />
+            <CardContent className="px-6 space-y-8">
+              {/* Test Basic Information */}
+              <div>
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl text-gray-900">
+                      {isEditing
+                        ? "Edit Assessment Information"
+                        : "Assessment Information"}
+                    </CardTitle>
+                    <CardDescription className="text-gray-600">
+                      Basic details about the assessment
+                    </CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-xl text-gray-900">
-                    {isEditing
-                      ? "Edit Assessment Information"
-                      : "Assessment Information"}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600">
-                    Basic details about the assessment
-                  </CardDescription>
-                </div>
+                <TestBasicInfoForm />
               </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <TestBasicInfoForm />
+
+              {/* Question Creation */}
+              <div className="mb-2">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="p-2 bg-green-50 rounded-lg">
+                    <PlusCircle className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl text-gray-900">
+                      {editingQuestionIndex !== null
+                        ? `Edit Question ${editingQuestionIndex + 1}`
+                        : `Add Question ${questions.length + 1}`}
+                    </CardTitle>
+                    <CardDescription className="text-gray-600">
+                      Create multiple choice questions
+                    </CardDescription>
+                  </div>
+                </div>
+                <QuestionCreationForm
+                  onAddQuestion={handleAddQuestion}
+                  isEditing={editingQuestionIndex !== null}
+                  onCancelEdit={handleCancelEdit}
+                />
+              </div>
+
+              {/* Action Buttons*/}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="submit"
+                  disabled={isLoading || questions.length === 0}
+                  className="flex-1  disabled:bg-gray-300 disabled:text-gray-500"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {isEditing ? "Updating..." : "Creating..."}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <Save className="h-4 w-4 mr-2" />
+                      {isEditing ? "Update Assessment" : "Save Assessment"}
+                    </div>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
+                  onClick={() => router.push("/test")}
+                >
+                  Cancel
+                </Button>
+              </div>
             </CardContent>
           </Card>
-
-          {/* Question Creation */}
-          <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow duration-200">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-green-50 rounded-lg">
-                  <PlusCircle className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl text-gray-900">
-                    {editingQuestionIndex !== null
-                      ? `Edit Question ${editingQuestionIndex + 1}`
-                      : `Add Question ${questions.length + 1}`}
-                  </CardTitle>
-                  <CardDescription className="text-gray-600">
-                    Create multiple choice questions
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <QuestionCreationForm
-                onAddQuestion={handleAddQuestion}
-                isEditing={editingQuestionIndex !== null}
-                onCancelEdit={handleCancelEdit}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              variant="outline"
-              type="button"
-              className="min-w-24 border-gray-300 text-gray-700 hover:bg-gray-50"
-              onClick={() => router.push("/test")}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isLoading || questions.length === 0}
-              className="min-w-40 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500"
-            >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {isEditing ? "Updating..." : "Creating..."}
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <Save className="h-4 w-4 mr-2" />
-                  {isEditing ? "Update Assessment" : "Save Assessment"}
-                </div>
-              )}
-            </Button>
-          </div>
         </div>
 
         {/* Right Column: Questions List - Always Visible */}
