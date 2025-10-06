@@ -36,6 +36,7 @@ const testSchema = z.object({
     .string()
     .min(1, "Assessment title is required")
     .min(3, "Title must be at least 3 characters"),
+  type: z.string().min(1, "Assessment type is required"),
   description: z
     .string()
     .min(0, { message: "Description is required" })

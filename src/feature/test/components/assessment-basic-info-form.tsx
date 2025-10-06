@@ -3,6 +3,12 @@
 import { Field } from "@/components/core/hook-form";
 
 export function TestBasicInfoForm() {
+  const assessmentOptions = [
+    { value: "mcqs", label: "Multiple Choice Questions" },
+    { value: "pictorial", label: "Pictorial" },
+    { value: "boolean", label: "True & False" },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4">
@@ -18,6 +24,14 @@ export function TestBasicInfoForm() {
           label="Duration (minutes)"
           placeholder="60"
           type="number"
+          required
+        />
+
+        <Field.Select
+          name="type"
+          label="Assessment Type"
+          placeholder="Select assessment type"
+          options={assessmentOptions}
           required
         />
       </div>
