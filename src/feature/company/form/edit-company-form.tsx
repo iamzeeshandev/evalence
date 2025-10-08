@@ -1,6 +1,5 @@
 "use client";
 
-import { UpdateCompanyPayload } from "@/services/rtk-query/company/company-type";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -38,7 +37,7 @@ interface EditCompanyFormProps {
   onClose: () => void;
   onSubmit: (values: z.infer<typeof companySchema>) => void;
   isLoading: boolean;
-  company: UpdateCompanyPayload;
+  company: any;
   props?: any;
 }
 

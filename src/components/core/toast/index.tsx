@@ -1,5 +1,5 @@
 import { toast, Toaster, ToastOptions } from 'react-hot-toast';
-import { X } from 'lucide-react'; // you can use any icon library
+import { X } from 'lucide-react';
 
 type NotificationType = 'success' | 'error' | 'loading' | 'custom' | 'blank';
 type NotificationOptions = ToastOptions & {

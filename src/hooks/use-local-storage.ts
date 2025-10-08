@@ -1,6 +1,19 @@
-import { isEqual } from '@/lib/helper';
-import { localStorageGetItem } from '@/lib/storage-available';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+
+// Simple deep equality check
+function isEqual(a: any, b: any): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+// Safe localStorage getter
+function localStorageGetItem(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch (error) {
+    console.error('localStorage not available:', error);
+    return null;
+  }
+}
 
 export type UseLocalStorageReturn<T> = {
   state: T;

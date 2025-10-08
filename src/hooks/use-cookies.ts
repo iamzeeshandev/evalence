@@ -1,5 +1,9 @@
-import { isEqual } from '@/lib/helper';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+
+// Simple deep equality check
+function isEqual(a: any, b: any): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
 
 export type UseCookiesReturn<T> = {
   state: T;

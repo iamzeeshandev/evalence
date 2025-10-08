@@ -15,6 +15,10 @@ export interface Company {
   status: string;
   createdAt: string;
   updatedAt: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+  isActive?: boolean;
 }
 
 export interface CompanyPayload {
@@ -32,6 +36,8 @@ export interface CompanyPayload {
   website?: string;
   industry?: string;
   size?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export type CompanyResponse = Company

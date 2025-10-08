@@ -28,7 +28,6 @@ import {
 import {
   Company,
   CompanyPayload,
-  UpdateCompanyPayload,
 } from "@/services/rtk-query/company/company-type";
 import {
   Building2,
@@ -49,12 +48,12 @@ import { EditCompanyForm } from "../form/edit-company-form";
 const mockCompanies: Company[] = [
   {
     id: "1",
-    companyName: "TechCorp Solutions",
+    name: "TechCorp Solutions",
     firstName: "Salman",
     lastName: "Sheikh",
     role: "company_admin",
     email: "admin@techcorp.com",
-    companyPhone: "+1-555-0123",
+    phone: "+1-555-0123",
     address: "123 Tech Street, Silicon Valley, CA 94000",
     city: "Silicon Valley",
     state: "CA",
@@ -70,9 +69,9 @@ const mockCompanies: Company[] = [
   },
   {
     id: "1",
-    companyName: "TechCorp Solutions",
+    name: "TechCorp Solutions",
     email: "admin@techcorp.com",
-    companyPhone: "+1-555-0123",
+    phone: "+1-555-0123",
     firstName: "Salman",
     lastName: "Sheikh",
     role: "company_admin",
@@ -107,8 +106,8 @@ export function CompanyManagement() {
 
   const filteredCompanies = companies.filter((company) => {
     const matchesSearch =
-      company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.email.toLowerCase().includes(searchTerm.toLowerCase());
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company?.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "all" ||
       (statusFilter === "active" && company.isActive) ||
@@ -124,14 +123,26 @@ export function CompanyManagement() {
     });
   };
 
-  const handleCreateCompany = (data: CompanyPayload) => {
-    createCompany(data);
+  const handleCreateCompany = (data: any) => {
+    createCompany({
+      name: data.companyName,
+      adminPassword: data.password,
+      phone: data.companyPhone,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    });
   };
 
-  const handleEditCompany = (data: UpdateCompanyPayload) => {
+  const handleEditCompany = (data: any) => {
     updateCompany({
       id: selectedCompany!.id,
-      data,
+      name: data.companyName,
+      phone: data.companyPhone,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      adminPassword: "", // Not updating password on edit
     });
   };
 
@@ -286,7 +297,7 @@ export function CompanyManagement() {
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <CardTitle className="text-lg">
-                          {company.companyName}
+                          {company.name}
                         </CardTitle>
                         <div className="flex items-center gap-2">
                           <Badge
@@ -324,10 +335,10 @@ export function CompanyManagement() {
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         <span className="truncate">{company.email}</span>
                       </div>
-                      {company.companyPhone && (
+                      {company.phone && (
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span>{company.companyPhone}</span>
+                          <span>{company.phone}</span>
                         </div>
                       )}
                       {company.address && (
@@ -389,7 +400,7 @@ export function CompanyManagement() {
                       >
                         <td className="p-4">
                           <div className="font-medium">
-                            {company.companyName}
+                            {company.name}
                           </div>
                         </td>
                         <td className="p-4">
@@ -444,7 +455,7 @@ export function CompanyManagement() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              Edit Company: {selectedCompany?.companyName}
+              Edit Company: {selectedCompany?.name}
             </DialogTitle>
           </DialogHeader>
           {selectedCompany && (
