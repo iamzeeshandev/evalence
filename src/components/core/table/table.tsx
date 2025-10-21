@@ -107,58 +107,60 @@ export default function Table<TData, TValue>({
           showClearButton={showClearButton}
         />
 
-        <div className="rounded-md py-4">
-          <ShadcnTable>
-            <TableHeader className="h-[3rem] bg-[#F4F6F8]">
-              {table.getHeaderGroups().map(headerGroup => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map(header => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRowSkeleton
-                  columns={columns.length}
-                  rows={tableState?.tableState.pageSize || defaultPageSize}
-                />
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map(row => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
-                    className="transition-all duration-200 hover:bg-gray-50/50"
-                  >
-                    {row.getVisibleCells().map((cell, index) => {
-                      const shouldWrap = index === 1 || index === 3 || index === 4 || index === 6;
-                      return (
-                        <TableCell
-                          key={cell.id}
-                          className={` ${shouldWrap ? 'max-w-[130px] min-w-[130px] break-words whitespace-normal' : ''} `}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      );
-                    })}
+        <div className="py-4">
+          <div className="overflow-x-auto">
+            <ShadcnTable>
+              <TableHeader className="h-[3rem] bg-[#F4F6F8]">
+                {table.getHeaderGroups().map(headerGroup => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    <div className="text-muted-foreground flex flex-col items-center justify-center">
-                      <div className="mb-2 text-lg font-medium">{emptyText}</div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </ShadcnTable>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRowSkeleton
+                    columns={columns.length}
+                    rows={tableState?.tableState.pageSize || defaultPageSize}
+                  />
+                ) : table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map(row => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && 'selected'}
+                      className="transition-all duration-200 hover:bg-gray-50/50"
+                    >
+                      {row.getVisibleCells().map((cell, index) => {
+                        const shouldWrap = index === 1 || index === 3 || index === 4 || index === 6;
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            className={` ${shouldWrap ? 'max-w-[130px] min-w-[130px] break-words whitespace-normal' : ''} `}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                      <div className="text-muted-foreground flex flex-col items-center justify-center">
+                        <div className="mb-2 text-lg font-medium">{emptyText}</div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </ShadcnTable>
+          </div>
 
           <TablePagination
             table={table}

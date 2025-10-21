@@ -56,9 +56,14 @@ const testSchema = z.object({
             z.object({
               text: z.string().min(1, "Option text is required"),
               isCorrect: z.boolean(),
+              score: z.number().optional(),
             })
           )
           .min(2, "At least 2 options are required"),
+        // Psychometric-specific fields
+        scoringStandard: z.string().optional(),
+        orientation: z.enum(["straight", "reverse"]).optional(),
+        dimension: z.string().optional(),
       })
     )
     .min(1, "At least one question is required"),
@@ -72,8 +77,13 @@ const testSchema = z.object({
       z.object({
         text: z.string(),
         isCorrect: z.boolean(),
+        score: z.number().optional(),
       })
     ),
+    // Psychometric-specific fields
+    scoringStandard: z.string().optional(),
+    orientation: z.enum(["straight", "reverse"]).optional(),
+    dimension: z.string().optional(),
   }),
 });
 
@@ -113,11 +123,14 @@ export function TestCreationForm({
         points: 5,
         imageUrl: "",
         options: [
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
         ],
+        scoringStandard: "",
+        orientation: undefined,
+        dimension: "",
       },
     },
   });
@@ -136,11 +149,14 @@ export function TestCreationForm({
           points: 5,
           imageUrl: "",
           options: [
-            { text: "", isCorrect: false },
-            { text: "", isCorrect: false },
-            { text: "", isCorrect: false },
-            { text: "", isCorrect: false },
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
           ],
+          scoringStandard: "",
+          orientation: undefined,
+          dimension: "",
         },
       });
     }
@@ -200,11 +216,14 @@ export function TestCreationForm({
       points: 5,
       imageUrl: "",
       options: [
-        { text: "", isCorrect: false },
-        { text: "", isCorrect: false },
-        { text: "", isCorrect: false },
-        { text: "", isCorrect: false },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
       ],
+      scoringStandard: "",
+      orientation: undefined,
+      dimension: "",
     });
   };
 
@@ -237,11 +256,14 @@ export function TestCreationForm({
         points: 5,
         imageUrl: "",
         options: [
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
-          { text: "", isCorrect: false },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
         ],
+        scoringStandard: "",
+        orientation: undefined,
+        dimension: "",
       });
     }
   };
@@ -254,11 +276,14 @@ export function TestCreationForm({
       points: 5,
       imageUrl: "",
       options: [
-        { text: "", isCorrect: false },
-        { text: "", isCorrect: false },
-        { text: "", isCorrect: false },
-        { text: "", isCorrect: false },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
       ],
+      scoringStandard: "",
+      orientation: undefined,
+      dimension: "",
     });
   };
 
@@ -266,6 +291,7 @@ export function TestCreationForm({
     try {
       const payload = {
         title: data.title,
+        type: data.type,
         description: data.description,
         isActive: data.isActive,
         duration: data.duration,

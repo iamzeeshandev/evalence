@@ -31,7 +31,10 @@ export function QuestionCreationForm({
 
   const currentQuestion = form.watch("currentQuestion");
   const questions = form.watch("questions");
+  const testType = form.watch("type");
   const nextQuestionNumber = questions.length + 1;
+  
+  const isPsychometric = testType === "psychometric";
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -52,13 +55,13 @@ export function QuestionCreationForm({
   };
 
   const addOption = () => {
-    appendOption({ text: "", isCorrect: false });
+    appendOption({ text: "", isCorrect: false, score: 0 });
   };
 
   const updateOption = (
     index: number,
-    field: "text" | "isCorrect",
-    value: string | boolean
+    field: "text" | "isCorrect" | "score",
+    value: string | boolean | number
   ) => {
     const currentOptions = form.getValues("currentQuestion.options");
 
@@ -81,11 +84,14 @@ export function QuestionCreationForm({
       points: 5,
       imageUrl: "",
       options: [
-        { text: "", isCorrect: false },
-        { text: "", isCorrect: false },
-        { text: "", isCorrect: false },
-        { text: "", isCorrect: false },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
       ],
+      scoringStandard: "",
+      orientation: undefined,
+      dimension: "",
     });
   };
 
@@ -155,9 +161,40 @@ export function QuestionCreationForm({
         className="w-24"
       />
 
+      {/* Psychometric-specific fields */}
+      {isPsychometric && (
+        <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+          <h3 className="text-sm font-semibold text-blue-900">
+            Psychometric Settings
+          </h3>
+          
+          <Field.Select
+            name="currentQuestion.orientation"
+            label="Question Orientation"
+            placeholder="Select orientation"
+            options={[
+              { value: "straight", label: "Straight" },
+              { value: "reverse", label: "Reverse" },
+            ]}
+          />
+
+          <Field.Text
+            name="currentQuestion.scoringStandard"
+            label="Scoring Standard"
+            placeholder="e.g., 1-5 Likert Scale"
+          />
+
+          <Field.Text
+            name="currentQuestion.dimension"
+            label="Question Dimension (Optional)"
+            placeholder="e.g., Extraversion, Neuroticism"
+          />
+        </div>
+      )}
+
       <div className="space-y-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          Answer Options
+          {isPsychometric ? "Response Options" : "Answer Options"}
         </label>
         {optionFields.map((field, index) => (
           <div key={field.id}>
@@ -169,20 +206,37 @@ export function QuestionCreationForm({
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex-1"
                 onBlur={() => form.trigger(`currentQuestion.options`)}
               />
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="correctAnswer"
-                  checked={
-                    currentQuestion?.options?.[index]?.isCorrect || false
-                  }
-                  onChange={(e) =>
-                    updateOption(index, "isCorrect", e.target.checked)
-                  }
-                  className="w-4 h-4"
-                />
-                <label className="text-sm">Correct</label>
-              </div>
+              
+              {isPsychometric ? (
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm whitespace-nowrap">Score:</label>
+                  <input
+                    type="number"
+                    value={currentQuestion?.options?.[index]?.score || 0}
+                    onChange={(e) =>
+                      updateOption(index, "score", parseInt(e.target.value) || 0)
+                    }
+                    className="w-20 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    placeholder="0"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="correctAnswer"
+                    checked={
+                      currentQuestion?.options?.[index]?.isCorrect || false
+                    }
+                    onChange={(e) =>
+                      updateOption(index, "isCorrect", e.target.checked)
+                    }
+                    className="w-4 h-4"
+                  />
+                  <label className="text-sm">Correct</label>
+                </div>
+              )}
+              
               {optionFields.length > 2 && (
                 <Button
                   type="button"

@@ -7,6 +7,7 @@ export function TestBasicInfoForm() {
     { value: "mcqs", label: "Multiple Choice Questions" },
     { value: "pictorial", label: "Pictorial" },
     { value: "boolean", label: "True & False" },
+    { value: "psychometric", label: "Psychometric" },
   ];
 
   return (

@@ -29,6 +29,7 @@ import { useState } from "react";
 import { SearchFilter } from "../components/search-filter";
 import { TestStatistics } from "../components/test-statistics";
 import { TestTakingInterface } from "./test-taking-interface-view";
+import { TestCreationForm } from "./test-creation-form";
 
 export function TestDashboard() {
   const {
@@ -209,9 +210,12 @@ export function TestDashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            // onClick={() => {
+                            //   setSelectedTest(test);
+                            //   setShowEditForm(true);
+                            // }}
                             onClick={() => {
-                              setSelectedTest(test);
-                              setShowEditForm(true);
+                              router.push(`/test/edit/${test.id}`);
                             }}
                           >
                             <Edit className="h-4 w-4" />
@@ -338,9 +342,7 @@ export function TestDashboard() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
-                                  setSelectedTest(test);
-
-                                  router.push(`/test/edit/${selectedTest?.id}`);
+                                  router.push(`/test/edit/${test.id}`);
                                 }}
                               >
                                 <Edit className="h-4 w-4" />
@@ -365,15 +367,12 @@ export function TestDashboard() {
             <DialogHeader>
               <DialogTitle>Edit Test: {selectedTest?.title}</DialogTitle>
             </DialogHeader>
-            {
-              selectedTest && router.push(`/test/edit/${selectedTest?.id}`)
-              // <TestCreationForm
-              //   testData={selectedTest}
-              //   testId={selectedTest?.id}
-              //   isEditing={true}
-              //   onClose={() => setShowEditForm(false)}
-              // />
-            }
+              <TestCreationForm
+                testData={selectedTest}
+                testId={selectedTest?.id}
+                isEditing={true}
+                onClose={() => setShowEditForm(false)}
+              />
           </DialogContent>
         </Dialog>
       )}

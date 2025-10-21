@@ -4,6 +4,7 @@ import { User } from "../users/users-type";
 
 export interface TestPayload {
   title: string;
+  type: string;
   description: string;
   isActive: boolean;
   duration: number;
@@ -14,6 +15,7 @@ export interface TestPayload {
 export interface TestResponse {
   id: string;
   title: string;
+  type: string;
   description: string;
   duration: number;
   isActive: boolean;
@@ -45,12 +47,17 @@ export interface Question {
   createdAt: string;
   updatedAt: string;
   options: Option[];
+  // Psychometric-specific fields
+  scoringStandard?: string;
+  orientation?: "straight" | "reverse";
+  dimension?: string;
 }
 
 export interface Option {
   id: string;
   text: string;
   isCorrect: boolean;
+  score?: number;
   imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;

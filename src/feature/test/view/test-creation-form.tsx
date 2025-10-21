@@ -77,6 +77,7 @@ export function TestCreationForm({
 }: TestCreationFormProps) {
   const [testData, setTestData] = useState({
     title: initialTestData?.title || "",
+    type: initialTestData?.type || "mcqs",
     description: initialTestData?.description || "",
     isActive: initialTestData?.isActive ?? true,
     duration: initialTestData?.duration || 60,

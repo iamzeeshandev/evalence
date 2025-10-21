@@ -22,6 +22,10 @@ const data = {
       url: "/take-test",
     },
     {
+      title: "User Tests",
+      url: "/user-tests",
+    },
+    {
       title: "Assessment center",
       url: "/",
       items: [

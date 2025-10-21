@@ -149,6 +149,20 @@ const batteryAssignmentApi = appApi
         { type: "BatteryAssignment", id: `user-${userId}-batteries` },
       ],
     }),
+
+    // Get user accessible tests
+    getUserAccessibleTests: build.query<
+      any[],
+      string
+    >({
+      query: (userId) => ({
+        url: `/battery-assignments/user/${userId}/accessible-tests`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, userId) => [
+        { type: "BatteryAssignment", id: `user-${userId}-tests` },
+      ],
+    }),
   }),
 });
 
@@ -163,4 +177,5 @@ export const {
   useGetBatteryAssignmentsByGroupIdQuery,
   useGetBatteryAssignmentsWithGroupsQuery,
   useGetUserAccessibleBatteriesQuery,
+  useGetUserAccessibleTestsQuery,
 } = batteryAssignmentApi;

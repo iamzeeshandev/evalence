@@ -58,6 +58,7 @@ const mockTestAttempts: TestAttemptResponse[] = [
     test: {
       id: "5c612485-7829-47bd-8b1d-394bca0af2b8",
       title: "Demo Test New",
+      type: "mcqs",
       description: "Demo Test New",
       duration: 60,
       isActive: true,
@@ -143,6 +144,7 @@ const mockTestAttempts: TestAttemptResponse[] = [
     test: {
       id: "6d723596-8940-58ce-92e2-405dbc1bg3c9",
       title: "Mathematics Quiz",
+      type: "mcqs",
       description: "Basic mathematics assessment",
       duration: 45,
       isActive: true,

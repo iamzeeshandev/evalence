@@ -37,11 +37,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     logout();
   };
 
-  const authenticated = localStorage?.getItem("evalence_user")
+  const authenticated = typeof window !== 'undefined' && localStorage?.getItem("evalence_user")
     ? JSON.parse(localStorage.getItem("evalence_user")!)?.accessToken
     : false;
 
-  if (!authenticated) {
+  if (!authenticated && typeof window !== 'undefined') {
     handleLogout();
   }
 
@@ -54,8 +54,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       ) : (
         <SidebarProvider>
           <AppSidebar />
-          <SidebarInset>
-            <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center justify-between border-b px-4">
+          <SidebarInset className="overflow-x-hidden">
+            <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center justify-between border-b px-4 z-10">
               <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
@@ -93,8 +93,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenu>
             </header>
 
-            <div className="flex flex-1 flex-col gap-4 p-4">
-              <div className="flex-1">{children}</div>
+            <div className="flex flex-1 flex-col gap-4 p-4 overflow-x-hidden">
+              <div className="flex-1 min-w-0">{children}</div>
             </div>
           </SidebarInset>
         </SidebarProvider>
