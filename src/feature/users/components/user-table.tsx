@@ -3,34 +3,36 @@
 import Table from "@/components/core/table/table";
 import { Button } from "@/components/ui/button";
 import { useTableState } from "@/hooks/use-table-state";
-import { useGetAllUsersQuery, useDeleteUserMutation } from "@/services/rtk-query";
-import { User, UserRole } from "@/services/rtk-query/users/users-type";
+import { useGetAllUsersQuery, useGetUsersByCompanyQuery, useDeleteUserMutation } from "@/services/rtk-query";
+import { User } from "@/services/rtk-query/users/users-type";
 import { formatDate } from "@/lib/date-utils";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Edit, Trash2, Plus, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { useAuth } from "@/lib/auth";
+import type { UserRole } from "@/types/common/enum";
 
-const getRoleBadgeColor = (role: UserRole) => {
+const getRoleBadgeColor = (role: string) => {
   switch (role) {
-    case UserRole.ADMIN:
+    case "admin":
       return "bg-red-100 text-red-800";
-    case UserRole.COMPANY_ADMIN:
+    case "company_admin":
       return "bg-blue-100 text-blue-800";
-    case UserRole.EMPLOYEE:
+    case "employee":
       return "bg-green-100 text-green-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
 };
 
-const getRoleLabel = (role: UserRole) => {
+const getRoleLabel = (role: string) => {
   switch (role) {
-    case UserRole.ADMIN:
+    case "admin":
       return "Admin";
-    case UserRole.COMPANY_ADMIN:
+    case "company_admin":
       return "Company Admin";
-    case UserRole.EMPLOYEE:
+    case "employee":
       return "Employee";
     default:
       return role;
@@ -41,10 +43,51 @@ export function UserTable() {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const tableState = useTableState();
+  const { authData } = useAuth();
   
-  const { data: users, isLoading } = useGetAllUsersQuery();
+  // Use different queries based on user role - using the same approach as app-sidebar
+  const isAdmin = authData.user?.role === "super_admin";
+  const isCompanyAdmin = authData.user?.role === "company_admin";
+  const companyId = authData.company?.id;
+  
+  // For admins, get all users (always fetch)
+  const { data: allUsers, isLoading: isLoadingAll } = useGetAllUsersQuery();
+  
+  // For company admins, get only users from their company
+  const { data: companyUsers, isLoading: isLoadingCompany } = useGetUsersByCompanyQuery(companyId || '', {
+    skip: !isCompanyAdmin || !companyId
+  });
+  
+  // Determine which users to show based on role
+  let users: User[] = [];
+  let isLoading = false;
+  
+  if (isAdmin) {
+    // Super admin sees all users
+    users = allUsers || [];
+    isLoading = isLoadingAll;
+  } else if (isCompanyAdmin && companyId) {
+    // Company admin sees only users from their company
+    users = companyUsers || [];
+    isLoading = isLoadingCompany;
+  } else {
+    // Other users see no users
+    users = [];
+    isLoading = false;
+  }
 
   const [deleteUser] = useDeleteUserMutation();
+
+  // Filter users to hide super admins for non-super admins
+  const filteredUsers = users?.filter(user => {
+    // If current user is super admin, show all users (no filtering)
+    if (authData.user?.role === "super_admin") {
+      return true;
+    }
+    
+    // Hide super admins from non-super admins
+    return user.role !== "admin";
+  }) || [];
 
   const handleEdit = (id: string) => {
     router.push(`/company-management/users/edit/${id}`);
@@ -178,8 +221,8 @@ export function UserTable() {
       <div className="py-3">
         <Table
           columns={columns}
-          data={users || []}
-          totalCount={users?.length || 0}
+          data={filteredUsers}
+          totalCount={filteredUsers.length}
           loading={isLoading}
           actions={actions}
           tableState={tableState}

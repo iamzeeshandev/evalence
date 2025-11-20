@@ -21,7 +21,11 @@ interface Test {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  questions: any[];
+  questions?: any[];
+  // Additional properties from battery assignment
+  batteryId?: string;
+  batteryName?: string;
+  weight?: number;
 }
 
 export function UserTestsTable() {
@@ -81,14 +85,18 @@ export function UserTestsTable() {
     }),
     columnHelper.accessor("questions", {
       header: "Questions",
-      cell: ({ getValue }) => (
-        <div className="flex items-center gap-1">
-          <BookOpen className="h-3 w-3 text-muted-foreground" />
-          <span className="text-muted-foreground">
-            {getValue?.length || 0} questions
-          </span>
-        </div>
-      ),
+      cell: ({ getValue }) => {
+        const questions = getValue();
+        const count = questions && Array.isArray(questions) ? questions.length : 0;
+        return (
+          <div className="flex items-center gap-1">
+            <BookOpen className="h-3 w-3 text-muted-foreground" />
+            <span className="text-muted-foreground">
+              {count} questions
+            </span>
+          </div>
+        );
+      },
     }),
     columnHelper.accessor("duration", {
       header: "Duration",

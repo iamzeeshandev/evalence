@@ -64,7 +64,7 @@ export function GroupTable() {
       header: "Members",
       cell: ({ getValue }) => (
         <span className="text-muted-foreground">
-          {getValue?.length || 0} members
+          {getValue()?.length || 0} members
         </span>
       ),
     }),

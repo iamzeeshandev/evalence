@@ -79,7 +79,10 @@ export function TakeTestView() {
 
   const getTotalQuestions = (battery: any) => {
     return battery.batteryTests?.reduce((total: number, batteryTest: any) => {
-      return total + (batteryTest.test?.questions?.length || 0);
+      const questionCount = batteryTest.test?.questions && Array.isArray(batteryTest.test.questions) 
+        ? batteryTest.test.questions.length 
+        : 0;
+      return total + questionCount;
     }, 0) || 0;
   };
 
@@ -232,7 +235,7 @@ export function TakeTestView() {
                           <div className="text-gray-500">
                             Weight: {batteryTest.weight}% | 
                             Duration: {batteryTest.test?.duration}ms | 
-                            Questions: {batteryTest.test?.questions?.length || 0}
+                            Questions: {batteryTest.test?.questions && Array.isArray(batteryTest.test.questions) ? batteryTest.test.questions.length : 0}
                           </div>
                         </div>
                       ))}

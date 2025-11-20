@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { UserRole } from "@/types/common/enum";
 
 type NavItem = {
   title: string;
@@ -28,6 +29,7 @@ type NavItem = {
   disabled?: boolean;
   children?: NavItem[];
   items?: NavItem[];
+  roles?: UserRole[]; 
 };
 
 export function NavMain({ items }: { items: NavItem[] }) {
