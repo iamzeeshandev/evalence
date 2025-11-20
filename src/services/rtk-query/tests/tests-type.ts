@@ -8,8 +8,15 @@ export interface TestPayload {
   description: string;
   isActive: boolean;
   duration: number;
-
   questions: QuestionPayload[];
+  // Psychometric test configuration
+  psychometricConfig?: {
+    scoringStandard?: string;
+    defaultOptions?: Array<{
+      text: string;
+      score: number;
+    }>;
+  };
 }
 
 export interface TestResponse {
@@ -41,14 +48,13 @@ export interface Question {
   id: string;
   text: string;
   type: string;
-  points: number;
+  points?: number;
   questionNo: number;
   imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   options: Option[];
   // Psychometric-specific fields
-  scoringStandard?: string;
   orientation?: "straight" | "reverse";
   dimension?: string;
 }

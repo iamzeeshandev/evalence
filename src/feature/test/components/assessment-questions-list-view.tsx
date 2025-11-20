@@ -7,13 +7,17 @@ import { useEffect, useRef, useState } from "react";
 interface Question {
   text: string;
   type: "single";
-  points: number;
+  points?: number;
   questionNo: number;
   imageUrl?: string;
   options: Array<{
     text: string;
     isCorrect: boolean;
+    score?: number;
   }>;
+  // Psychometric-specific fields
+  orientation?: "straight" | "reverse";
+  dimension?: string;
 }
 
 interface QuestionsListViewProps {
@@ -84,9 +88,16 @@ export function QuestionsListView({
               </h4>
             </div>
             <div className="flex items-center gap-1">
-              <div className="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-xs font-medium">
-                {question.points} {question.points === 1 ? "pt" : "pts"}
-              </div>
+              {question.points && (
+                <div className="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-xs font-medium">
+                  {question.points} {question.points === 1 ? "pt" : "pts"}
+                </div>
+              )}
+              {question.orientation && (
+                <div className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                  {question.orientation}
+                </div>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -133,39 +144,42 @@ export function QuestionsListView({
 
           {/* Options list */}
           <div className="space-y-1 px-3">
-            {[...question.options]
-              ?.sort((a, b) => a.text.localeCompare(b.text))
-              .map((option, optIndex) => (
+            {question.options.map((option, optIndex) => (
+              <div
+                key={optIndex}
+                className={`flex items-start gap-1.5 p-1.5 rounded border transition-colors ${
+                  option.isCorrect
+                    ? "bg-green-50 border-green-200"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
                 <div
-                  key={optIndex}
-                  className={`flex items-start gap-1.5 p-1.5 rounded border transition-colors ${
+                  className={`flex items-center justify-center w-3.5 h-3.5 rounded-full border mt-0.5 ${
                     option.isCorrect
-                      ? "bg-green-50 border-green-200"
-                      : "bg-gray-50 border-gray-200"
+                      ? "bg-green-500 border-green-600"
+                      : "bg-white border-gray-400"
                   }`}
                 >
-                  <div
-                    className={`flex items-center justify-center w-3.5 h-3.5 rounded-full border mt-0.5 ${
-                      option.isCorrect
-                        ? "bg-green-500 border-green-600"
-                        : "bg-white border-gray-400"
-                    }`}
-                  >
-                    {option.isCorrect && (
-                      <Check className="h-2 w-2 text-white" />
-                    )}
-                  </div>
-                  <span
-                    className={`text-xs flex-1 leading-tight ${
-                      option.isCorrect
-                        ? "font-medium text-green-800"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    {option.text}
-                  </span>
+                  {option.isCorrect && (
+                    <Check className="h-2 w-2 text-white" />
+                  )}
                 </div>
-              ))}
+                <span
+                  className={`text-xs flex-1 leading-tight ${
+                    option.isCorrect
+                      ? "font-medium text-green-800"
+                      : "text-gray-700"
+                  }`}
+                >
+                  {option.text}
+                </span>
+                {option.score !== undefined && (
+                  <span className="text-xs text-gray-500 font-medium">
+                    ({option.score})
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Footer with correct answer indicator */}
@@ -174,7 +188,9 @@ export function QuestionsListView({
               <span>
                 {question.options.filter((opt) => opt.isCorrect).length === 1
                   ? "1 correct"
-                  : `0 correct`}
+                  : question.orientation 
+                    ? `${question.orientation} orientation`
+                    : "0 correct"}
               </span>
               <span>{question.options.length} opts</span>
             </div>

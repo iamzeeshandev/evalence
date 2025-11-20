@@ -43,12 +43,24 @@ const testSchema = z.object({
     .min(1, { message: "Description must be at least 20 characters" }),
   isActive: z.boolean(),
   duration: z.number().min(1, "Duration must be at least 1 minute"),
+  
+  // Psychometric test configuration (only for psychometric tests)
+  psychometricConfig: z.object({
+    scoringStandard: z.string().optional(),
+    defaultOptions: z.array(
+      z.object({
+        text: z.string().min(1, "Option text is required"),
+        score: z.number(),
+      })
+    ).optional(),
+  }).optional(),
+
   questions: z
     .array(
       z.object({
         text: z.string().min(1, "Question text is required"),
         type: z.literal("single"),
-        points: z.number().min(1, "Points must be at least 1"),
+        points: z.number().min(1, "Points must be at least 1").optional(),
         questionNo: z.number(),
         imageUrl: z.string().optional(),
         options: z
@@ -61,7 +73,6 @@ const testSchema = z.object({
           )
           .min(2, "At least 2 options are required"),
         // Psychometric-specific fields
-        scoringStandard: z.string().optional(),
         orientation: z.enum(["straight", "reverse"]).optional(),
         dimension: z.string().optional(),
       })
@@ -71,7 +82,7 @@ const testSchema = z.object({
   currentQuestion: z.object({
     text: z.string(),
     type: z.literal("single"),
-    points: z.number(),
+    points: z.number().optional(),
     imageUrl: z.string().optional(),
     options: z.array(
       z.object({
@@ -81,7 +92,6 @@ const testSchema = z.object({
       })
     ),
     // Psychometric-specific fields
-    scoringStandard: z.string().optional(),
     orientation: z.enum(["straight", "reverse"]).optional(),
     dimension: z.string().optional(),
   }),
@@ -116,6 +126,9 @@ export function TestCreationForm({
       description: "",
       isActive: true,
       duration: 60,
+      psychometricConfig: {
+        defaultOptions: [],
+      },
       questions: [],
       currentQuestion: {
         text: "",
@@ -128,7 +141,6 @@ export function TestCreationForm({
           { text: "", isCorrect: false, score: 0 },
           { text: "", isCorrect: false, score: 0 },
         ],
-        scoringStandard: "",
         orientation: undefined,
         dimension: "",
       },
@@ -142,6 +154,9 @@ export function TestCreationForm({
         description: initialTestData.description || "",
         isActive: initialTestData.isActive,
         duration: initialTestData.duration,
+        psychometricConfig: initialTestData.psychometricConfig || {
+          defaultOptions: [],
+        },
         questions: initialTestData.questions || [],
         currentQuestion: {
           text: "",
@@ -154,7 +169,6 @@ export function TestCreationForm({
             { text: "", isCorrect: false, score: 0 },
             { text: "", isCorrect: false, score: 0 },
           ],
-          scoringStandard: "",
           orientation: undefined,
           dimension: "",
         },
@@ -167,6 +181,8 @@ export function TestCreationForm({
   const handleAddQuestion = () => {
     const questions = form.getValues("questions");
     const currentQuestionData = form.getValues("currentQuestion");
+    const testType = form.getValues("type");
+    const psychometricConfig = form.getValues("psychometricConfig");
 
     // Validate current question
     if (!currentQuestionData.text.trim()) {
@@ -192,11 +208,21 @@ export function TestCreationForm({
 
     if (hasEmpty) return;
 
+    // For psychometric tests, validate orientation is selected
+    if (testType === "psychometric" && !currentQuestionData.orientation) {
+      form.setError("currentQuestion.orientation", {
+        message: "Question orientation is required for psychometric tests",
+      });
+      return;
+    }
+
     if (editingQuestionIndex !== null) {
       const updatedQuestions = [...questions];
       updatedQuestions[editingQuestionIndex] = {
         ...currentQuestionData,
         questionNo: editingQuestionIndex + 1,
+        // Remove points for psychometric tests
+        ...(testType === "psychometric" ? { points: undefined } : {}),
       };
       form.setValue("questions", updatedQuestions);
       setEditingQuestionIndex(null);
@@ -205,6 +231,8 @@ export function TestCreationForm({
       const newQuestion = {
         ...currentQuestionData,
         questionNo: questions.length + 1,
+        // Remove points for psychometric tests
+        ...(testType === "psychometric" ? { points: undefined } : {}),
       };
       form.setValue("questions", [...questions, newQuestion]);
     }
@@ -213,15 +241,20 @@ export function TestCreationForm({
     form.setValue("currentQuestion", {
       text: "",
       type: "single",
-      points: 5,
+      points: testType === "psychometric" ? undefined : 5,
       imageUrl: "",
-      options: [
-        { text: "", isCorrect: false, score: 0 },
-        { text: "", isCorrect: false, score: 0 },
-        { text: "", isCorrect: false, score: 0 },
-        { text: "", isCorrect: false, score: 0 },
-      ],
-      scoringStandard: "",
+      options: testType === "psychometric" && psychometricConfig?.defaultOptions?.length 
+        ? psychometricConfig.defaultOptions.map(opt => ({
+            text: opt.text,
+            isCorrect: false,
+            score: opt.score,
+          }))
+        : [
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+          ],
       orientation: undefined,
       dimension: "",
     });
@@ -261,7 +294,6 @@ export function TestCreationForm({
           { text: "", isCorrect: false, score: 0 },
           { text: "", isCorrect: false, score: 0 },
         ],
-        scoringStandard: "",
         orientation: undefined,
         dimension: "",
       });
@@ -269,19 +301,27 @@ export function TestCreationForm({
   };
 
   const handleCancelEdit = () => {
+    const testType = form.getValues("type");
+    const psychometricConfig = form.getValues("psychometricConfig");
+    
     setEditingQuestionIndex(null);
     form.setValue("currentQuestion", {
       text: "",
       type: "single",
-      points: 5,
+      points: testType === "psychometric" ? undefined : 5,
       imageUrl: "",
-      options: [
-        { text: "", isCorrect: false, score: 0 },
-        { text: "", isCorrect: false, score: 0 },
-        { text: "", isCorrect: false, score: 0 },
-        { text: "", isCorrect: false, score: 0 },
-      ],
-      scoringStandard: "",
+      options: testType === "psychometric" && psychometricConfig?.defaultOptions?.length 
+        ? psychometricConfig.defaultOptions.map(opt => ({
+            text: opt.text,
+            isCorrect: false,
+            score: opt.score,
+          }))
+        : [
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+          ],
       orientation: undefined,
       dimension: "",
     });
@@ -296,6 +336,7 @@ export function TestCreationForm({
         isActive: data.isActive,
         duration: data.duration,
         questions: data.questions,
+        ...(data.type === "psychometric" && data.psychometricConfig ? { psychometricConfig: data.psychometricConfig } : {}),
       };
 
       if (isEditing && testId) {
