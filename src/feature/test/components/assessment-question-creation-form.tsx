@@ -33,6 +33,7 @@ export function QuestionCreationForm({
   const currentQuestion = form.watch("currentQuestion");
   const questions = form.watch("questions");
   const testType = form.watch("type");
+  const psychometricConfig = form.watch("psychometricConfig");
   const nextQuestionNumber = questions.length + 1;
   
   const isPsychometric = testType === "psychometric";
@@ -120,10 +121,20 @@ export function QuestionCreationForm({
     form.setValue("currentQuestion", {
       text: "",
       type: "single" as const,
-      points: 5,
+      points: isPsychometric ? undefined : 5,
       imageUrl: "",
-      options: defaultOptions,
-      scoringStandard: "",
+      options: isPsychometric && psychometricConfig?.defaultOptions?.length 
+        ? psychometricConfig.defaultOptions.map((opt: { text: string; score: number }) => ({
+            text: opt.text,
+            isCorrect: false,
+            score: opt.score,
+          }))
+        : [
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+            { text: "", isCorrect: false, score: 0 },
+          ],
       orientation: undefined,
       dimension: "",
     });
@@ -192,12 +203,14 @@ export function QuestionCreationForm({
         )}
       </div>
 
-      <Field.Text
-        name="currentQuestion.points"
-        label="Points"
-        type="number"
-        className="w-24"
-      />
+      {!isPsychometric && (
+        <Field.Text
+          name="currentQuestion.points"
+          label="Points"
+          type="number"
+          className="w-24"
+        />
+      )}
 
       {/* Psychometric-specific fields */}
       {isPsychometric && (
@@ -211,15 +224,10 @@ export function QuestionCreationForm({
             label="Question Orientation"
             placeholder="Select orientation"
             options={[
-              { value: "straight", label: "Straight" },
-              { value: "reverse", label: "Reverse" },
+              { value: "straight", label: "Straight (1-5 scoring)" },
+              { value: "reverse", label: "Reverse (5-1 scoring)" },
             ]}
-          />
-
-          <Field.Text
-            name="currentQuestion.scoringStandard"
-            label="Scoring Standard"
-            placeholder="e.g., 1-5 Likert Scale"
+            required
           />
 
           <Field.Text

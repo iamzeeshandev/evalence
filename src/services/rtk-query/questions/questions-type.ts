@@ -3,8 +3,11 @@ import { OptionPayload } from "../options/options-type";
 export interface QuestionPayload {
   text: string;
   type: string;
-  points: number;
+  points?: number;
   questionNo: number;
   imageUrl?: string;
   options: OptionPayload[];
+  // Psychometric-specific fields
+  orientation?: "straight" | "reverse";
+  dimension?: string;
 }
