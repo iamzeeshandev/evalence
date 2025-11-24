@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useFileUploadMutation } from "@/services/rtk-query/file/file-api";
 import { ImageIcon, Plus, Trash2, Upload, X } from "lucide-react";
 import { useFieldArray, useFormContext } from "react-hook-form";
+import { useEffect } from "react";
 
 interface QuestionCreationFormProps {
   onAddQuestion: () => void;
@@ -35,6 +36,27 @@ export function QuestionCreationForm({
   const nextQuestionNumber = questions.length + 1;
   
   const isPsychometric = testType === "psychometric";
+  const isBoolean = testType === "boolean";
+
+  // Effect to automatically set true/false options when boolean type is selected
+  useEffect(() => {
+    if (isBoolean) {
+      // Set default true/false options
+      const currentOptions = form.getValues("currentQuestion.options");
+      const hasValidOptions = 
+        currentOptions?.length === 2 && 
+        currentOptions[0]?.text === "Yes" && 
+        currentOptions[1]?.text === "No";
+      
+      // Only set default options if current options are not already set correctly
+      if (!hasValidOptions) {
+        form.setValue("currentQuestion.options", [
+          { text: "Yes", isCorrect: false, score: 0 },
+          { text: "No", isCorrect: false, score: 0 },
+        ]);
+      }
+    }
+  }, [isBoolean, form]);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -55,6 +77,8 @@ export function QuestionCreationForm({
   };
 
   const addOption = () => {
+    // Don't allow adding options in boolean mode
+    if (isBoolean) return;
     appendOption({ text: "", isCorrect: false, score: 0 });
   };
 
@@ -72,23 +96,33 @@ export function QuestionCreationForm({
         isCorrect: i === index,
       }));
       form.setValue("currentQuestion.options", updatedOptions);
+    } else if (field === "text" && isBoolean) {
+      // Don't allow changing text in boolean mode
+      return;
     } else {
       form.setValue(`currentQuestion.options.${index}.${field}`, value);
     }
   };
 
   const resetCurrentQuestion = () => {
+    const defaultOptions = isBoolean
+      ? [
+          { text: "Yes", isCorrect: false, score: 0 },
+          { text: "No", isCorrect: false, score: 0 },
+        ]
+      : [
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+        ];
+
     form.setValue("currentQuestion", {
       text: "",
       type: "single" as const,
       points: 5,
       imageUrl: "",
-      options: [
-        { text: "", isCorrect: false, score: 0 },
-        { text: "", isCorrect: false, score: 0 },
-        { text: "", isCorrect: false, score: 0 },
-        { text: "", isCorrect: false, score: 0 },
-      ],
+      options: defaultOptions,
       scoringStandard: "",
       orientation: undefined,
       dimension: "",
@@ -198,7 +232,7 @@ export function QuestionCreationForm({
 
       <div className="space-y-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          {isPsychometric ? "Response Options" : "Answer Options"}
+          {isPsychometric ? "Response Options" : isBoolean ? "True/False Options" : "Answer Options"}
         </label>
         {optionFields.map((field, index) => (
           <div key={field.id}>
@@ -209,6 +243,8 @@ export function QuestionCreationForm({
                 placeholder={`Option ${index + 1}`}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex-1"
                 onBlur={() => form.trigger(`currentQuestion.options`)}
+                // Disable text editing for boolean questions
+                disabled={isBoolean}
               />
               
               {isPsychometric ? (
@@ -241,7 +277,8 @@ export function QuestionCreationForm({
                 </div>
               )}
               
-              {optionFields.length > 2 && (
+              {/* Don't show remove button for boolean questions (only 2 options) */}
+              {!isBoolean && optionFields.length > 2 && (
                 <Button
                   type="button"
                   variant="outline"
@@ -269,20 +306,22 @@ export function QuestionCreationForm({
         ))}
       </div>
 
-      {/* Add Option Button */}
-      <Button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          addOption();
-        }}
-        variant="outline"
-        className="w-full"
-        type="button"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Option
-      </Button>
+      {/* Add Option Button - Hide for boolean questions */}
+      {!isBoolean && (
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            addOption();
+          }}
+          variant="outline"
+          className="w-full"
+          type="button"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Option
+        </Button>
+      )}
 
       {/* Action Buttons */}
       <div className="flex gap-2">
