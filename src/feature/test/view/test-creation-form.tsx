@@ -147,15 +147,15 @@ export function TestCreationForm({
       currentQuestion.options.some((opt) => opt.text)
     ) {
       if (editingQuestion) {
-        // ✅ Update existing question
-        setQuestions((prevQuestions) =>
-          prevQuestions.map((q) =>
-            q.questionNo === currentQuestion.questionNo
-              ? { ...currentQuestion }
-              : q
-          )
-        );
-
+        // ✅ Update existing question by finding the correct index
+        const updatedQuestions = questions.map((q) => {
+          // Match by questionNo to find the correct question to update
+          if (q.questionNo === currentQuestion.questionNo) {
+            return { ...currentQuestion };
+          }
+          return q;
+        });
+        setQuestions(updatedQuestions);
         setEditQuestion(false); // exit editing mode
       } else {
         // ✅ Add new question
@@ -171,7 +171,7 @@ export function TestCreationForm({
         text: "",
         type: "single",
         points: 5,
-        questionNo: editingQuestion ? questionsAddedCount : questionsAddedCount,
+        questionNo: editingQuestion ? currentQuestion.questionNo : questionsAddedCount,
         imageUrl: "",
         options: Array.from({ length: 4 }, () => ({
           text: "",
@@ -182,19 +182,19 @@ export function TestCreationForm({
   };
 
   const deleteQuestion = (questionNumber: number) => {
-    setQuestions((prevQuestions) => {
-      const updated = prevQuestions
-        .filter((q) => q.questionNo !== questionNumber) // remove the one to delete
-        .map((q) =>
-          q.questionNo > questionNumber
-            ? { ...q, questionNo: q.questionNo - 1 } // shift later ones
-            : q
-        );
-
-      return updated.sort((a, b) => a.questionNo - b.questionNo);
-    });
-
-    setQuestionsAddedCount(questionsAddedCount - 1);
+    // Filter out the question to delete
+    const updatedQuestions = questions.filter((q) => q.questionNo !== questionNumber);
+    
+    // Sort the remaining questions by questionNo to maintain order
+    const sortedQuestions = updatedQuestions.sort((a, b) => a.questionNo - b.questionNo);
+    
+    setQuestions(sortedQuestions);
+    
+    // Update the questionsAddedCount to be one more than the highest question number
+    const maxQuestionNo = sortedQuestions.length > 0 
+      ? Math.max(...sortedQuestions.map(q => q.questionNo)) 
+      : 0;
+    setQuestionsAddedCount(maxQuestionNo + 1);
   };
 
   const editQuestion = (questionNumber: number) => {

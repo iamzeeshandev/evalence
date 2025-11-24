@@ -101,7 +101,7 @@ export function TestCreationForm({
   testId,
 }: TestCreationFormProps) {
   const router = useRouter();
-  const [editingQuestionIndex, setEditingQuestionIndex] = useState<
+  const [editingQuestionNumber, setEditingQuestionNumber] = useState<
     number | null
   >(null);
 
@@ -192,14 +192,15 @@ export function TestCreationForm({
 
     if (hasEmpty) return;
 
-    if (editingQuestionIndex !== null) {
-      const updatedQuestions = [...questions];
-      updatedQuestions[editingQuestionIndex] = {
-        ...currentQuestionData,
-        questionNo: editingQuestionIndex + 1,
-      };
+    if (editingQuestionNumber !== null) {
+      // Update existing question by finding it by questionNo and replacing it
+      const updatedQuestions = questions.map((q) => 
+        q.questionNo === editingQuestionNumber 
+          ? { ...currentQuestionData, questionNo: editingQuestionNumber } 
+          : q
+      );
       form.setValue("questions", updatedQuestions);
-      setEditingQuestionIndex(null);
+      setEditingQuestionNumber(null);
     } else {
       // Add new question
       const newQuestion = {
@@ -233,23 +234,19 @@ export function TestCreationForm({
     );
     if (questionToEdit) {
       form.setValue("currentQuestion", questionToEdit);
-      setEditingQuestionIndex(questionNumber - 1);
+      setEditingQuestionNumber(questionNumber);
     }
   };
 
   const handleDeleteQuestion = (questionNumber: number) => {
-    const updatedQuestions = questions
-      .filter((q) => q.questionNo !== questionNumber)
-      .map((q, index) => ({
-        ...q,
-        questionNo: index + 1,
-      }));
-
+    // Filter out the question to delete
+    const updatedQuestions = questions.filter((q) => q.questionNo !== questionNumber);
+    
     form.setValue("questions", updatedQuestions);
-
+    
     // If we're editing the deleted question, cancel edit mode
-    if (editingQuestionIndex === questionNumber - 1) {
-      setEditingQuestionIndex(null);
+    if (editingQuestionNumber === questionNumber) {
+      setEditingQuestionNumber(null);
       form.setValue("currentQuestion", {
         text: "",
         type: "single",
@@ -269,7 +266,7 @@ export function TestCreationForm({
   };
 
   const handleCancelEdit = () => {
-    setEditingQuestionIndex(null);
+    setEditingQuestionNumber(null);
     form.setValue("currentQuestion", {
       text: "",
       type: "single",
@@ -377,8 +374,8 @@ export function TestCreationForm({
                   </div>
                   <div>
                     <CardTitle className="text-xl text-gray-900">
-                      {editingQuestionIndex !== null
-                        ? `Edit Question ${editingQuestionIndex + 1}`
+                      {editingQuestionNumber !== null
+                        ? `Edit Question ${editingQuestionNumber}`
                         : `Add Question ${questions.length + 1}`}
                     </CardTitle>
                     <CardDescription className="text-gray-600">
@@ -388,7 +385,7 @@ export function TestCreationForm({
                 </div>
                 <QuestionCreationForm
                   onAddQuestion={handleAddQuestion}
-                  isEditing={editingQuestionIndex !== null}
+                  isEditing={editingQuestionNumber !== null}
                   onCancelEdit={handleCancelEdit}
                 />
               </div>

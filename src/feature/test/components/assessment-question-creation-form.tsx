@@ -124,7 +124,11 @@ export function QuestionCreationForm({
               variant="destructive"
               size="sm"
               className="absolute top-2 right-2"
-              onClick={removeImage}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                removeImage();
+              }}
               type="button"
             >
               <X className="h-4 w-4" />
@@ -242,7 +246,11 @@ export function QuestionCreationForm({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => removeOption(index)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeOption(index);
+                  }}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -263,7 +271,11 @@ export function QuestionCreationForm({
 
       {/* Add Option Button */}
       <Button
-        onClick={addOption}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          addOption();
+        }}
         variant="outline"
         className="w-full"
         type="button"
@@ -274,13 +286,28 @@ export function QuestionCreationForm({
 
       {/* Action Buttons */}
       <div className="flex gap-2">
-        <Button onClick={onAddQuestion} className="flex-1" type="button">
-          <Plus className="h-4 w-4 mr-2" />
-          {isEditing ? "Update Question" : `Add Question ${nextQuestionNumber}`}
-        </Button>
+        <Button onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onAddQuestion();
+        }}
+        className="flex-1"
+        type="button"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        {isEditing ? "Update Question" : `Add Question ${nextQuestionNumber}`}
+      </Button>
 
         {isEditing && (
-          <Button onClick={handleCancel} variant="outline" type="button">
+          <Button 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleCancel();
+            }} 
+            variant="outline" 
+            type="button"
+          >
             Cancel
           </Button>
         )}

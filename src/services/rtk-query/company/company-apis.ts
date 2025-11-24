@@ -32,6 +32,13 @@ const companyApi = appApi
         }),
         providesTags: [{ type: "Company", id: "companies-dropdown" }],
       }),
+      getMyCompaniesDropdown: build.query<CompanyListResponse, void>({
+        query: () => ({
+          url: `/companies/dropdown/my-companies`,
+          method: "GET",
+        }),
+        providesTags: [{ type: "Company", id: "my-companies-dropdown" }],
+      }),
       saveCompany: build.mutation<CompanyResponse, CompanyPayload>({
         query: (payload) => ({
           url: `/companies`,
@@ -68,6 +75,7 @@ export const {
   useGetCompanyByIdQuery,
   useGetAllCompaniesQuery,
   useGetCompaniesDropdownQuery,
+  useGetMyCompaniesDropdownQuery,
   useSaveCompanyMutation,
   useUpdateCompanyMutation,
   useDeleteCompanyMutation,

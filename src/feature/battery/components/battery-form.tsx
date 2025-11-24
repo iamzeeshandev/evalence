@@ -114,11 +114,19 @@ export function BatteryForm() {
   };
 
   const updateTestWeight = (testId: string, newWeight: number) => {
+    // Ensure the weight is within valid range
+    if (isNaN(newWeight) || newWeight < 1 || newWeight > 100) return;
+    
     const currentTests = form.getValues("tests");
     const updatedTests = currentTests.map(test => 
       test.testId === testId ? { ...test, weight: newWeight } : test
     );
     form.setValue("tests", updatedTests);
+    
+    // Clear any previous test validation errors
+    if (form.formState.errors.tests) {
+      form.clearErrors("tests");
+    }
   };
 
   const onSubmit = async (values: BatteryFormData) => {
@@ -136,7 +144,10 @@ export function BatteryForm() {
         name: values.name,
         description: values.description,
         isActive: values.isActive,
-        tests: values.tests,
+        tests: values.tests.map(test => ({
+          testId: test.testId,
+          weight: test.weight
+        }))
       };
 
       if (isEditMode) {
@@ -151,12 +162,19 @@ export function BatteryForm() {
         `Failed to ${isEditMode ? "update" : "create"} battery:`,
         err?.data?.message || "An error occurred"
       );
-      form.setError("root", {
-        type: "manual",
-        message:
-          err?.data?.message ||
-          `Failed to ${isEditMode ? "update" : "create"} battery. Please try again.`,
-      });
+      // Check if it's a validation error from the backend
+      if (err?.data?.message) {
+        form.setError("root", {
+          type: "manual",
+          message: err.data.message,
+        });
+      } else {
+        form.setError("root", {
+          type: "manual",
+          message:
+            `Failed to ${isEditMode ? "update" : "create"} battery. Please try again.`,
+        });
+      }
     }
   };
 
