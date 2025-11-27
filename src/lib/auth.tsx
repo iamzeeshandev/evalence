@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setAuthData(newAuthData);
     localStorage.setItem("evalence_user", JSON.stringify(newAuthData));
-    router.push("/test");
+    router.push("/");
   };
 
   const logout = () => {

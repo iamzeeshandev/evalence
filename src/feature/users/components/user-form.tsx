@@ -15,6 +15,7 @@ import {
   useUpdateUserMutation,
   useGetUserByIdQuery,
   useGetCompaniesDropdownQuery,
+  useGetMyCompaniesDropdownQuery,
 } from "@/services/rtk-query";
 import { UserPayload, UserRole } from "@/services/rtk-query/users/users-type";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +25,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
 import { z } from "zod";
+import { useAuth } from "@/lib/auth";
 
 const userSchema = z.object({
   firstName: z
@@ -68,6 +70,10 @@ export function UserForm() {
   const params = useParams();
   const userId = params?.id as string;
   const isEditMode = !!userId;
+  const { authData } = useAuth();
+  
+  // Determine if the current user is a super admin
+  const isSuperAdmin = authData.user?.role === "super_admin";
 
   const [saveUser, { isLoading: isSaving }] = useSaveUserMutation();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
@@ -77,7 +83,19 @@ export function UserForm() {
       skip: !isEditMode,
     }
   );
-  const { data: companies, isLoading: isLoadingCompanies } = useGetCompaniesDropdownQuery();
+  
+  // Use different company dropdown queries based on user role
+  const { data: allCompanies, isLoading: isLoadingAllCompanies } = useGetCompaniesDropdownQuery(undefined, {
+    skip: !isSuperAdmin
+  });
+  
+  const { data: myCompanies, isLoading: isLoadingMyCompanies } = useGetMyCompaniesDropdownQuery(undefined, {
+    skip: isSuperAdmin
+  });
+  
+  // Use appropriate companies data based on user role
+  const companies = isSuperAdmin ? allCompanies : myCompanies;
+  const isLoadingCompanies = isSuperAdmin ? isLoadingAllCompanies : isLoadingMyCompanies;
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),

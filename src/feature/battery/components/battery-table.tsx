@@ -73,11 +73,15 @@ export function BatteryTable() {
     }),
     columnHelper.accessor("batteryTests", {
       header: "Tests Count",
-      cell: ({ getValue }) => (
-        <span className="text-muted-foreground">
-          {getValue?.length || 0} tests
-        </span>
-      ),
+      cell: ({ getValue }) => {
+        const batteryTests = getValue();
+        const count = batteryTests ? batteryTests.length : 0;
+        return (
+          <span className="text-muted-foreground">
+            {count} test{count !== 1 ? 's' : ''}
+          </span>
+        );
+      },
     }),
     columnHelper.accessor("createdAt", {
       header: "Created",

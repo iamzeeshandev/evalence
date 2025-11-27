@@ -29,6 +29,16 @@ export interface TestResponse {
   createdAt: string;
   updatedAt: string;
   questions: Question[];
+  batteryTests?: BatteryTest[];
+}
+
+export interface BatteryTest {
+  id: string;
+  batteryId: string;
+  testId: string;
+  weight: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UserTestResponse {

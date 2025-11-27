@@ -72,9 +72,9 @@ export function QuestionsListView({
       className="space-y-1.5  overflow-y-auto scroll-smooth"
       style={{ maxHeight }}
     >
-      {questions.reverse().map((question, index) => (
+      {[...questions].reverse().map((question, index) => ( // Create a copy before reversing
         <div
-          key={index}
+          key={question.questionNo} // Changed from index to questionNo for better key stability
           className="border-b border-gray-150 py-3 bg-white hover:bg-gray-50 transition-colors duration-150 last:border-b-0"
         >
           {/* Header with question number and actions */}
@@ -101,7 +101,11 @@ export function QuestionsListView({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onEditQuestion(question.questionNo)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEditQuestion(question.questionNo);
+                }}
                 className="h-6 w-6 p-0 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                 title="Edit question"
               >
@@ -110,7 +114,11 @@ export function QuestionsListView({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onDeleteQuestion(question.questionNo)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDeleteQuestion(question.questionNo);
+                }}
                 className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
                 title="Delete question"
               >

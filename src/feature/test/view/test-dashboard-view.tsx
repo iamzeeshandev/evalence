@@ -210,10 +210,6 @@ export function TestDashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            // onClick={() => {
-                            //   setSelectedTest(test);
-                            //   setShowEditForm(true);
-                            // }}
                             onClick={() => {
                               router.push(`/test/edit/${test.id}`);
                             }}
@@ -253,10 +249,6 @@ export function TestDashboard() {
                       <Button
                         className="w-full cursor-pointer"
                         variant={test.isActive ? "default" : "secondary"}
-                        // onClick={() => {
-                        //   setSelectedTest(test);
-                        //   handleStartTest();
-                        // }}
                         onClick={() => handleStartTest(test)}
                         disabled={
                           !test.isActive || (test.questions?.length || 0) === 0

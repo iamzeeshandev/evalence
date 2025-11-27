@@ -111,7 +111,7 @@ export function TestCreationForm({
   testId,
 }: TestCreationFormProps) {
   const router = useRouter();
-  const [editingQuestionIndex, setEditingQuestionIndex] = useState<
+  const [editingQuestionNumber, setEditingQuestionNumber] = useState<
     number | null
   >(null);
 
@@ -216,16 +216,16 @@ export function TestCreationForm({
       return;
     }
 
-    if (editingQuestionIndex !== null) {
+    if (editingQuestionNumber !== null) {
       const updatedQuestions = [...questions];
-      updatedQuestions[editingQuestionIndex] = {
+      updatedQuestions[editingQuestionNumber - 1] = {
         ...currentQuestionData,
-        questionNo: editingQuestionIndex + 1,
+        questionNo: editingQuestionNumber,
         // Remove points for psychometric tests
         ...(testType === "psychometric" ? { points: undefined } : {}),
       };
       form.setValue("questions", updatedQuestions);
-      setEditingQuestionIndex(null);
+      setEditingQuestionNumber(null);
     } else {
       // Add new question
       const newQuestion = {
@@ -266,34 +266,39 @@ export function TestCreationForm({
     );
     if (questionToEdit) {
       form.setValue("currentQuestion", questionToEdit);
-      setEditingQuestionIndex(questionNumber - 1);
+      setEditingQuestionNumber(questionNumber);
     }
   };
 
   const handleDeleteQuestion = (questionNumber: number) => {
-    const updatedQuestions = questions
-      .filter((q) => q.questionNo !== questionNumber)
-      .map((q, index) => ({
-        ...q,
-        questionNo: index + 1,
-      }));
-
+    // Filter out the question to delete
+    const updatedQuestions = questions.filter((q) => q.questionNo !== questionNumber);
+    
     form.setValue("questions", updatedQuestions);
-
+    
     // If we're editing the deleted question, cancel edit mode
-    if (editingQuestionIndex === questionNumber - 1) {
-      setEditingQuestionIndex(null);
+    if (editingQuestionNumber === questionNumber) {
+      setEditingQuestionNumber(null);
+      const testType = form.getValues("type");
+      const psychometricConfig = form.getValues("psychometricConfig");
+      
       form.setValue("currentQuestion", {
         text: "",
         type: "single",
-        points: 5,
+        points: testType === "psychometric" ? undefined : 5,
         imageUrl: "",
-        options: [
-          { text: "", isCorrect: false, score: 0 },
-          { text: "", isCorrect: false, score: 0 },
-          { text: "", isCorrect: false, score: 0 },
-          { text: "", isCorrect: false, score: 0 },
-        ],
+        options: testType === "psychometric" && psychometricConfig?.defaultOptions?.length 
+          ? psychometricConfig.defaultOptions.map(opt => ({
+              text: opt.text,
+              isCorrect: false,
+              score: opt.score,
+            }))
+          : [
+              { text: "", isCorrect: false, score: 0 },
+              { text: "", isCorrect: false, score: 0 },
+              { text: "", isCorrect: false, score: 0 },
+              { text: "", isCorrect: false, score: 0 },
+            ],
         orientation: undefined,
         dimension: "",
       });
@@ -304,7 +309,7 @@ export function TestCreationForm({
     const testType = form.getValues("type");
     const psychometricConfig = form.getValues("psychometricConfig");
     
-    setEditingQuestionIndex(null);
+    setEditingQuestionNumber(null);
     form.setValue("currentQuestion", {
       text: "",
       type: "single",
@@ -418,8 +423,8 @@ export function TestCreationForm({
                   </div>
                   <div>
                     <CardTitle className="text-xl text-gray-900">
-                      {editingQuestionIndex !== null
-                        ? `Edit Question ${editingQuestionIndex + 1}`
+                      {editingQuestionNumber !== null
+                        ? `Edit Question ${editingQuestionNumber}`
                         : `Add Question ${questions.length + 1}`}
                     </CardTitle>
                     <CardDescription className="text-gray-600">
@@ -429,7 +434,7 @@ export function TestCreationForm({
                 </div>
                 <QuestionCreationForm
                   onAddQuestion={handleAddQuestion}
-                  isEditing={editingQuestionIndex !== null}
+                  isEditing={editingQuestionNumber !== null}
                   onCancelEdit={handleCancelEdit}
                 />
               </div>

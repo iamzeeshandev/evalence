@@ -65,6 +65,7 @@ export function TestBasicInfoForm() {
         name="description"
         label="Description"
         placeholder="Enter assessment description"
+        required
       />
 
       {/* Psychometric Configuration */}

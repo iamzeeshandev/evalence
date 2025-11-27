@@ -24,6 +24,9 @@ export const appApi = createApi({
     "File",
     "TestAssignments",
     "TestAttempts",
+    "Battery",
+    "BatteryAssignment", 
+    "Groups",
   ],
   endpoints: () => ({}),
 });

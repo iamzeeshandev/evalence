@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { AppSidebar } from "./app-sidebar";
 
 export type DashboardLayoutProps = {
@@ -37,13 +38,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     logout();
   };
 
-  const authenticated = typeof window !== 'undefined' && localStorage?.getItem("evalence_user")
-    ? JSON.parse(localStorage.getItem("evalence_user")!)?.accessToken
-    : false;
+  useEffect(() => {
+    const authenticated = typeof window !== 'undefined' && localStorage?.getItem("evalence_user")
+      ? JSON.parse(localStorage.getItem("evalence_user")!)?.accessToken
+      : false;
 
-  if (!authenticated && typeof window !== 'undefined') {
-    handleLogout();
-  }
+    if (!authenticated && typeof window !== 'undefined') {
+      handleLogout();
+    }
+  }, [router]);
 
   return (
     <>

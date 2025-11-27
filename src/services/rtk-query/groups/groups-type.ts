@@ -23,7 +23,6 @@ export interface GroupUser {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
   role: string;
   phone?: string;
   isActive: boolean;

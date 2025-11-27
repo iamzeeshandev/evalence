@@ -38,7 +38,7 @@ const groupsApi = appApi
       }),
       updateGroup: build.mutation<GroupResponse, { id: string; payload: GroupPayload }>({
         query: ({ id, payload }) => ({
-          url: `/groups/${id}`,
+          url: `/groups/update/${id}`,
           method: "PUT",
           body: payload,
         }),

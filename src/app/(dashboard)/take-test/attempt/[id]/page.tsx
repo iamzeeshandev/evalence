@@ -1,11 +1,11 @@
-import { TestAttemptView } from "@/feature/test-taking/test-attempt-view";
+import { TestQuestionView } from "@/feature/test-taking/test-question-view";
 
-export const metadata = { title: `Test Attempt` };
+export const metadata = { title: `Test Questions` };
 
 export default function Page() {
   return (
     <div className="min-h-screen bg-background">
-      <TestAttemptView />
+      <TestQuestionView />
     </div>
   );
 }
