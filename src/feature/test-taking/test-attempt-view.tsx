@@ -55,9 +55,9 @@ export function TestAttemptView() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-xl">{batteryName}</CardTitle>
-                <CardDescription>
+                {/* <CardDescription>
                   Battery ID: {batteryId}
-                </CardDescription>
+                </CardDescription> */}
               </div>
               <Badge variant="default" className="bg-blue-600">
                 In Progress
@@ -132,7 +132,7 @@ export function TestAttemptView() {
               </div>
             </div>
 
-            <div className="mt-6 p-4 bg-gray-50 border rounded-lg">
+            {/* <div className="mt-6 p-4 bg-gray-50 border rounded-lg">
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
                 <div>
@@ -145,7 +145,7 @@ export function TestAttemptView() {
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
@@ -160,14 +160,13 @@ export function TestAttemptView() {
           </Button>
           
           <div className="flex gap-3">
-            <Button variant="outline">
+            {/* <Button variant="outline">
               Preview Questions
-            </Button>
+            </Button> */}
             <Button 
               className="bg-blue-600 hover:bg-blue-700"
               onClick={() => {
-                console.log("Starting test attempt:", { batteryId, batteryName });
-                alert("Test attempt feature will be implemented in the next phase!");
+                router.push(`/take-test/attempt/${batteryId}`);
               }}
             >
               <Play className="h-4 w-4 mr-2" />
@@ -176,7 +175,7 @@ export function TestAttemptView() {
           </div>
         </div>
 
-        {/* Status Information */}
+        {/* Status Information
         <Card className="border-dashed">
           <CardContent className="py-6">
             <div className="text-center space-y-3">
@@ -201,7 +200,7 @@ export function TestAttemptView() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

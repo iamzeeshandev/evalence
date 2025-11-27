@@ -22,7 +22,6 @@ interface Test {
   createdAt: string;
   updatedAt: string;
   questions?: any[];
-  // Additional properties from battery assignment
   batteryId?: string;
   batteryName?: string;
   weight?: number;
@@ -59,7 +58,8 @@ export function UserTestsTable() {
   }, [authData.user]);
 
   const handleTakeTest = (id: string, title: string) => {
-    router.push(`/user-tests/attempt/${id}?name=${encodeURIComponent(title)}`);
+    // Pass test ID and title for direct test access
+    router.push(`/take-test/details/${id}?name=${encodeURIComponent(title)}&mode=test`);
   };
 
   const columnHelper = createColumnHelper<Test>();

@@ -9,6 +9,7 @@ import { useLoginMutation } from "@/services/rtk-query/auth/auth-api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -29,6 +30,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const { login } = useAuth();
+  const router = useRouter();
   const [loginUserMut, { isLoading }] = useLoginMutation();
   const [passwordVisibility, setPasswordVisibility] = useState(false);
 

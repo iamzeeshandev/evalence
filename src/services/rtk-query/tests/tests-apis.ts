@@ -14,6 +14,13 @@ const testsApi = appApi
         }),
         providesTags: (result, error, id) => [{ type: "Tests", id }],
       }),
+      getAccessibleTestById: build.query<TestResponse, string>({
+        query: (id) => ({
+          url: `/tests/accessible/${id}`,
+          method: "GET",
+        }),
+        providesTags: (result, error, id) => [{ type: "Tests", id }],
+      }),
       getAllTests: build.query<TestResponse[], void>({
         query: () => ({
           url: `/tests/list`,
@@ -69,6 +76,7 @@ const testsApi = appApi
 
 export const {
   useGetTestByIdQuery,
+  useGetAccessibleTestByIdQuery,
   useGetAllTestsQuery,
   useGetAllCompanyTestsQuery,
   useGetAllUserTestsQuery,

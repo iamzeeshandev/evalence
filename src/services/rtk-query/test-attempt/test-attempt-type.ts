@@ -4,7 +4,7 @@ import { TestResponse } from "../tests/tests-type";
 export interface StartTestAttemptPayload {
   testId: string;
   userId: string;
-  userAssignmentId?: string;
+  batteryId: string | null;
 }
 
 export interface SubmitTestAttemptPayload {
@@ -16,7 +16,7 @@ export interface TestAttemptResponse {
   id: string;
   testId: string;
   userId: string;
-  userAssignmentId?: string;
+  batteryId?: string;
   status: "in_progress" | "submitted" | "expired";
   totalPoints: number;
   awardedPoints: number;

@@ -5,13 +5,21 @@ import { Button } from "@/components/ui/button";
 import { useFileUploadMutation } from "@/services/rtk-query/file/file-api";
 import { ImageIcon, Plus, Trash2, Upload, X } from "lucide-react";
 import { useFieldArray, useFormContext } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface QuestionCreationFormProps {
   onAddQuestion: () => void;
   isEditing: boolean;
   onCancelEdit: () => void;
 }
+
+// Define the different boolean option types
+const BOOLEAN_OPTION_TYPES = [
+  { value: "yes-no", label: "Yes / No" },
+  { value: "true-false", label: "True / False" },
+  { value: "correct-incorrect", label: "Correct / Incorrect" },
+  { value: "right-wrong", label: "Right / Wrong" },
+];
 
 export function QuestionCreationForm({
   onAddQuestion,
@@ -20,6 +28,7 @@ export function QuestionCreationForm({
 }: QuestionCreationFormProps) {
   const form = useFormContext();
   const [uploadFileMutation] = useFileUploadMutation();
+  const [booleanOptionType, setBooleanOptionType] = useState("yes-no");
 
   const {
     fields: optionFields,
@@ -38,26 +47,56 @@ export function QuestionCreationForm({
   
   const isPsychometric = testType === "psychometric";
   const isBoolean = testType === "boolean";
+  const isPictorial = testType === "pictorial";
+
+  // Get the option labels based on the selected boolean option type
+  const getBooleanOptions = () => {
+    switch (booleanOptionType) {
+      case "yes-no":
+        return [
+          { text: "Yes", isCorrect: false },
+          { text: "No", isCorrect: false },
+        ];
+      case "true-false":
+        return [
+          { text: "True", isCorrect: false },
+          { text: "False", isCorrect: false },
+        ];
+      case "correct-incorrect":
+        return [
+          { text: "Correct", isCorrect: false },
+          { text: "Incorrect", isCorrect: false },
+        ];
+      case "right-wrong":
+        return [
+          { text: "Right", isCorrect: false },
+          { text: "Wrong", isCorrect: false },
+        ];
+      default:
+        return [
+          { text: "Yes", isCorrect: false },
+          { text: "No", isCorrect: false },
+        ];
+    }
+  };
 
   // Effect to automatically set true/false options when boolean type is selected
   useEffect(() => {
     if (isBoolean) {
       // Set default true/false options
       const currentOptions = form.getValues("currentQuestion.options");
+      const defaultOptions = getBooleanOptions();
       const hasValidOptions = 
         currentOptions?.length === 2 && 
-        currentOptions[0]?.text === "Yes" && 
-        currentOptions[1]?.text === "No";
+        currentOptions[0]?.text === defaultOptions[0].text && 
+        currentOptions[1]?.text === defaultOptions[1].text;
       
       // Only set default options if current options are not already set correctly
       if (!hasValidOptions) {
-        form.setValue("currentQuestion.options", [
-          { text: "Yes", isCorrect: false, score: 0 },
-          { text: "No", isCorrect: false, score: 0 },
-        ]);
+        form.setValue("currentQuestion.options", defaultOptions);
       }
     }
-  }, [isBoolean, form]);
+  }, [isBoolean, booleanOptionType, form]);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -80,13 +119,13 @@ export function QuestionCreationForm({
   const addOption = () => {
     // Don't allow adding options in boolean mode
     if (isBoolean) return;
-    appendOption({ text: "", isCorrect: false, score: 0 });
+    appendOption({ text: "", isCorrect: false });
   };
 
   const updateOption = (
     index: number,
-    field: "text" | "isCorrect" | "score",
-    value: string | boolean | number
+    field: "text" | "isCorrect",
+    value: string | boolean
   ) => {
     const currentOptions = form.getValues("currentQuestion.options");
 
@@ -107,15 +146,12 @@ export function QuestionCreationForm({
 
   const resetCurrentQuestion = () => {
     const defaultOptions = isBoolean
-      ? [
-          { text: "Yes", isCorrect: false, score: 0 },
-          { text: "No", isCorrect: false, score: 0 },
-        ]
+      ? getBooleanOptions()
       : [
-          { text: "", isCorrect: false, score: 0 },
-          { text: "", isCorrect: false, score: 0 },
-          { text: "", isCorrect: false, score: 0 },
-          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
         ];
 
     form.setValue("currentQuestion", {
@@ -127,14 +163,8 @@ export function QuestionCreationForm({
         ? psychometricConfig.defaultOptions.map((opt: { text: string; score: number }) => ({
             text: opt.text,
             isCorrect: false,
-            score: opt.score,
           }))
-        : [
-            { text: "", isCorrect: false, score: 0 },
-            { text: "", isCorrect: false, score: 0 },
-            { text: "", isCorrect: false, score: 0 },
-            { text: "", isCorrect: false, score: 0 },
-          ],
+        : defaultOptions,
       orientation: undefined,
       dimension: "",
     });
@@ -154,54 +184,57 @@ export function QuestionCreationForm({
         onBlur={() => form.trigger("currentQuestion.text")}
       />
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          Question Image (Optional)
-        </label>
-        {currentQuestion?.imageUrl ? (
-          <div className="relative inline-block">
-            <img
-              src={currentQuestion.imageUrl || "/placeholder.svg"}
-              alt="Question"
-              className="max-w-xs max-h-48 rounded-lg border"
-            />
-            <Button
-              variant="destructive"
-              size="sm"
-              className="absolute top-2 right-2"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                removeImage();
-              }}
-              type="button"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ) : (
-          <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-            <div className="text-center">
-              <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <div className="mt-4">
-                <label htmlFor="image-upload" className="cursor-pointer">
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-                    <Upload className="h-4 w-4" />
-                    Click to upload image
-                  </div>
-                </label>
-                <input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
+      {/* Show image section only for pictorial test type */}
+      {isPictorial && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            Question Image (Optional)
+          </label>
+          {currentQuestion?.imageUrl ? (
+            <div className="relative inline-block">
+              <img
+                src={currentQuestion.imageUrl || "/placeholder.svg"}
+                alt="Question"
+                className="max-w-xs max-h-48 rounded-lg border"
+              />
+              <Button
+                variant="destructive"
+                size="sm"
+                className="absolute top-2 right-2"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  removeImage();
+                }}
+                type="button"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+              <div className="text-center">
+                <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                <div className="mt-4">
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                      <Upload className="h-4 w-4" />
+                      Click to upload image
+                    </div>
+                  </label>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {!isPsychometric && (
         <Field.Text
@@ -238,6 +271,17 @@ export function QuestionCreationForm({
         </div>
       )}
 
+      {/* Boolean option type selector */}
+      {isBoolean && (
+        <Field.Select
+          name="booleanOptionType"
+          label="Boolean Option Type"
+          placeholder="Select boolean option type"
+          options={BOOLEAN_OPTION_TYPES}
+          onValueChange={(value) => setBooleanOptionType(value as string)}
+        />
+      )}
+
       <div className="space-y-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           {isPsychometric ? "Response Options" : isBoolean ? "True/False Options" : "Answer Options"}
@@ -255,35 +299,20 @@ export function QuestionCreationForm({
                 disabled={isBoolean}
               />
               
-              {isPsychometric ? (
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm whitespace-nowrap">Score:</label>
-                  <input
-                    type="number"
-                    value={currentQuestion?.options?.[index]?.score || 0}
-                    onChange={(e) =>
-                      updateOption(index, "score", parseInt(e.target.value) || 0)
-                    }
-                    className="w-20 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    placeholder="0"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name="correctAnswer"
-                    checked={
-                      currentQuestion?.options?.[index]?.isCorrect || false
-                    }
-                    onChange={(e) =>
-                      updateOption(index, "isCorrect", e.target.checked)
-                    }
-                    className="w-4 h-4"
-                  />
-                  <label className="text-sm">Correct</label>
-                </div>
-              )}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="correctAnswer"
+                  checked={
+                    currentQuestion?.options?.[index]?.isCorrect || false
+                  }
+                  onChange={(e) =>
+                    updateOption(index, "isCorrect", e.target.checked)
+                  }
+                  className="w-4 h-4"
+                />
+                <label className="text-sm">Correct</label>
+              </div>
               
               {/* Don't show remove button for boolean questions (only 2 options) */}
               {!isBoolean && optionFields.length > 2 && (

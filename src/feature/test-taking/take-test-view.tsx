@@ -70,7 +70,7 @@ export function TakeTestView() {
 
   const handleTakeTest = (batteryId: string, batteryName: string) => {
     // Navigate to test attempt page with battery info
-    router.push(`/take-test/attempt/${batteryId}?name=${encodeURIComponent(batteryName)}`);
+    router.push(`/take-test/details/${batteryId}?name=${encodeURIComponent(batteryName)}&mode=battery`);
   };
 
   const formatDate = (dateString: string) => {
@@ -234,7 +234,7 @@ export function TakeTestView() {
                           <div className="font-medium">{batteryTest.test?.title}</div>
                           <div className="text-gray-500">
                             Weight: {batteryTest.weight}% | 
-                            Duration: {batteryTest.test?.duration}ms | 
+                            Duration: {batteryTest.test?.duration || 0} mins | 
                             Questions: {batteryTest.test?.questions && Array.isArray(batteryTest.test.questions) ? batteryTest.test.questions.length : 0}
                           </div>
                         </div>
@@ -273,7 +273,7 @@ export function TakeTestView() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
-                  {accessibleBatteries.length}
+                  {accessibleBatteries.filter(b => b.isActive && getTotalQuestions(b) > 0).reduce((total, battery) => total + (battery.batteryTests?.length || 0), 0)}
                 </div>
                 <div className="text-sm text-gray-600">Available Tests</div>
               </div>

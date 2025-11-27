@@ -1,3 +1,5 @@
+import { Question } from "../tests/tests-type";
+
 export interface Test {
   id: string;
   title: string;
@@ -8,6 +10,7 @@ export interface Test {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  questions?: Question[];
 }
 
 export interface BatteryTest {

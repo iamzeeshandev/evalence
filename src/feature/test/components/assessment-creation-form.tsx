@@ -216,11 +216,11 @@ export function TestCreationForm({
       return;
     }
 
-    if (editingQuestionIndex !== null) {
+    if (editingQuestionNumber !== null) {
       const updatedQuestions = [...questions];
-      updatedQuestions[editingQuestionIndex] = {
+      updatedQuestions[editingQuestionNumber - 1] = {
         ...currentQuestionData,
-        questionNo: editingQuestionIndex + 1,
+        questionNo: editingQuestionNumber,
         // Remove points for psychometric tests
         ...(testType === "psychometric" ? { points: undefined } : {}),
       };
@@ -279,17 +279,26 @@ export function TestCreationForm({
     // If we're editing the deleted question, cancel edit mode
     if (editingQuestionNumber === questionNumber) {
       setEditingQuestionNumber(null);
+      const testType = form.getValues("type");
+      const psychometricConfig = form.getValues("psychometricConfig");
+      
       form.setValue("currentQuestion", {
         text: "",
         type: "single",
-        points: 5,
+        points: testType === "psychometric" ? undefined : 5,
         imageUrl: "",
-        options: [
-          { text: "", isCorrect: false, score: 0 },
-          { text: "", isCorrect: false, score: 0 },
-          { text: "", isCorrect: false, score: 0 },
-          { text: "", isCorrect: false, score: 0 },
-        ],
+        options: testType === "psychometric" && psychometricConfig?.defaultOptions?.length 
+          ? psychometricConfig.defaultOptions.map(opt => ({
+              text: opt.text,
+              isCorrect: false,
+              score: opt.score,
+            }))
+          : [
+              { text: "", isCorrect: false, score: 0 },
+              { text: "", isCorrect: false, score: 0 },
+              { text: "", isCorrect: false, score: 0 },
+              { text: "", isCorrect: false, score: 0 },
+            ],
         orientation: undefined,
         dimension: "",
       });
@@ -300,7 +309,7 @@ export function TestCreationForm({
     const testType = form.getValues("type");
     const psychometricConfig = form.getValues("psychometricConfig");
     
-    setEditingQuestionIndex(null);
+    setEditingQuestionNumber(null);
     form.setValue("currentQuestion", {
       text: "",
       type: "single",
