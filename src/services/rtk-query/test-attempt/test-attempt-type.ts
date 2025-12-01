@@ -4,7 +4,7 @@ import { TestResponse } from "../tests/tests-type";
 export interface StartTestAttemptPayload {
   testId: string;
   userId: string;
-  batteryId: string | null;
+  batteryId?: string | null;
 }
 
 export interface SubmitTestAttemptPayload {
