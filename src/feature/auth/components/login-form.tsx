@@ -7,10 +7,10 @@ import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { useLoginMutation } from "@/services/rtk-query/auth/auth-api";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Chrome } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -31,8 +31,39 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loginUserMut, { isLoading }] = useLoginMutation();
   const [passwordVisibility, setPasswordVisibility] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Check for Google auth errors in URL parameters
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      let message = "Login failed. Please try again.";
+      
+      switch (error) {
+        case "google_auth_failed":
+          message = "Google authentication failed. Please try again.";
+          break;
+        case "invalid_token":
+          message = "Invalid authentication token. Please try again.";
+          break;
+        case "invalid_callback":
+          message = "Authentication callback failed. Please try again.";
+          break;
+        default:
+          message = "Login failed. Please try again.";
+      }
+      
+      setErrorMessage(message);
+      
+      // Remove error param from URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("error");
+      router.replace(`/auth/sign-in?${newParams.toString()}`, { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -67,6 +98,11 @@ export function LoginForm({
 
   const togglePasswordVisibility = () => {
     setPasswordVisibility(!passwordVisibility);
+  };
+
+  const handleGoogleSignIn = () => {
+    // Redirect to the Google OAuth endpoint
+    window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google/login`;
   };
 
   return (
@@ -114,9 +150,9 @@ export function LoginForm({
               />
             </div>
 
-            {form.formState.errors.root && (
+            {(form.formState.errors.root || errorMessage) && (
               <div className="text-sm text-red-600 font-medium">
-                {form.formState.errors.root.message}
+                {form.formState.errors.root?.message || errorMessage}
               </div>
             )}
 
@@ -132,6 +168,27 @@ export function LoginForm({
 
             <Button type="submit" className="w-full mb-3" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login To Dashboard"}
+            </Button>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Google Sign In Button */}
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full mb-3 flex items-center justify-center gap-2"
+              onClick={handleGoogleSignIn}
+            >
+              <Chrome className="h-5 w-5" />
+              Sign in with Google
             </Button>
 
             <div className="text-center text-sm">
