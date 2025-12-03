@@ -1,36 +1,38 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Check, Edit, Trash2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface Question {
+  id: string;
   text: string;
-  type: "single";
+  type: string;
   points?: number;
   questionNo: number;
-  imageUrl?: string;
+  imageUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
   options: Array<{
+    id: string;
     text: string;
     isCorrect: boolean;
     score?: number;
+    imageUrl?: string | null;
+    createdAt: string;
+    updatedAt: string;
   }>;
   // Psychometric-specific fields
   orientation?: "straight" | "reverse";
   dimension?: string;
 }
 
-interface QuestionsListViewProps {
+interface ReadonlyQuestionsListViewProps {
   questions: Question[];
-  onEditQuestion: (questionNumber: number) => void;
-  onDeleteQuestion: (questionNumber: number) => void;
 }
 
-export function QuestionsListView({
+export function ReadonlyQuestionsListView({
   questions,
-  onEditQuestion,
-  onDeleteQuestion,
-}: QuestionsListViewProps) {
+}: ReadonlyQuestionsListViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [maxHeight, setMaxHeight] = useState("65vh");
@@ -54,6 +56,7 @@ export function QuestionsListView({
       window.removeEventListener("resize", updateMaxHeight);
     };
   }, []);
+  
   // Scroll to bottom whenever questions array length changes
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -72,12 +75,12 @@ export function QuestionsListView({
       className="space-y-1.5  overflow-y-auto scroll-smooth"
       style={{ maxHeight }}
     >
-      {[...questions].sort((a, b) => a.questionNo - b.questionNo).map((question, index) => (
+      {[...questions].sort((a, b) => a.questionNo - b.questionNo).map((question) => (
         <div
-          key={question.questionNo} // Changed from index to questionNo for better key stability
+          key={question.questionNo}
           className="border-b border-gray-150 py-3 bg-white hover:bg-gray-50 transition-colors duration-150 last:border-b-0"
         >
-          {/* Header with question number and actions */}
+          {/* Header with question number */}
           <div className="flex justify-between items-start mb-2 px-3">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-700 rounded font-medium text-xs">
@@ -98,32 +101,6 @@ export function QuestionsListView({
                   {question.orientation}
                 </div>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onEditQuestion(question.questionNo);
-                }}
-                className="h-6 w-6 p-0 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                title="Edit question"
-              >
-                <Edit className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onDeleteQuestion(question.questionNo);
-                }}
-                className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600 transition-colors"
-                title="Delete question"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
             </div>
           </div>
 
