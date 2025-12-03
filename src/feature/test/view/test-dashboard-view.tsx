@@ -277,9 +277,9 @@ export function TestDashboard() {
                           </Badge>
                         </td>
                         <td className="p-4">
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                            {test.duration} min
+                          <div className="flex items-center whitespace-nowrap min-w-[120px]">
+                            <Clock className="h-4 w-4 mr-2 text-muted-foreground flex-shrink-0" />
+                            <span className="truncate">{test.duration} min</span>
                           </div>
                         </td>
                         <td className="p-4">{test.questions?.length || 0}</td>
