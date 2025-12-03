@@ -4,7 +4,8 @@ import { User } from "../users/users-type";
 
 export interface TestPayload {
   title: string;
-  type: string;
+  type?: string;
+  testCategory?: string;
   description: string;
   isActive: boolean;
   duration: number;
@@ -17,6 +18,15 @@ export interface TestPayload {
       score: number;
     }>;
   };
+  // Psychometric-specific fields
+  likertScale?: Array<{
+    label: string;
+    value: number;
+  }>;
+  likertMin?: number;
+  likertMax?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface TestResponse {

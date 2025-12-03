@@ -193,7 +193,7 @@ export function SelectField({
                 field.onChange(value);
                 onValueChange?.(value);
               }}
-              value={field.value}
+              value={field.value ?? ""}
               disabled={disabled}
             >
               <FormControl>
