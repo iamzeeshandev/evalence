@@ -55,6 +55,16 @@ const testSchema = z.object({
     ).optional(),
   }).optional(),
 
+  // Psychometric-specific fields at test level
+  likertScale: z.array(
+    z.object({
+      label: z.string().min(1, "Label is required"),
+      value: z.number(),
+    })
+  ).optional(),
+  likertMin: z.number().optional(),
+  likertMax: z.number().optional(),
+
   questions: z
     .array(
       z.object({
@@ -71,9 +81,10 @@ const testSchema = z.object({
               score: z.number().optional(),
             })
           )
-          .min(2, "At least 2 options are required"),
+          .optional(), // Optional for psychometric tests
         // Psychometric-specific fields
         orientation: z.enum(["straight", "reverse"]).optional(),
+        questionOrientation: z.enum(["STRAIGHT", "REVERSE"]).optional(),
         dimension: z.string().optional(),
       })
     )
@@ -90,9 +101,10 @@ const testSchema = z.object({
         isCorrect: z.boolean(),
         score: z.number().optional(),
       })
-    ),
+    ).optional(), // Optional for psychometric tests
     // Psychometric-specific fields
     orientation: z.enum(["straight", "reverse"]).optional(),
+    questionOrientation: z.enum(["STRAIGHT", "REVERSE"]).optional(),
     dimension: z.string().optional(),
   }),
 });
@@ -129,6 +141,9 @@ export function TestCreationForm({
       psychometricConfig: {
         defaultOptions: [],
       },
+      likertScale: [],
+      likertMin: 1,
+      likertMax: 5,
       questions: [],
       currentQuestion: {
         text: "",
@@ -142,6 +157,7 @@ export function TestCreationForm({
           { text: "", isCorrect: false, score: 0 },
         ],
         orientation: undefined,
+        questionOrientation: undefined,
         dimension: "",
       },
     },
@@ -157,6 +173,9 @@ export function TestCreationForm({
         psychometricConfig: initialTestData.psychometricConfig || {
           defaultOptions: [],
         },
+        likertScale: initialTestData.likertScale || [],
+        likertMin: initialTestData.likertMin,
+        likertMax: initialTestData.likertMax,
         questions: initialTestData.questions || [],
         currentQuestion: {
           text: "",
@@ -170,6 +189,7 @@ export function TestCreationForm({
             { text: "", isCorrect: false, score: 0 },
           ],
           orientation: undefined,
+          questionOrientation: undefined,
           dimension: "",
         },
       });
@@ -192,70 +212,104 @@ export function TestCreationForm({
       return;
     }
 
-    const options = currentQuestionData.options;
-
-    // Check each option
-    let hasEmpty = false;
-    options.forEach((opt, index) => {
-      if (!opt.text.trim()) {
-        hasEmpty = true;
-        form.setError(`currentQuestion.options.${index}.text`, {
+    // For non-psychometric tests, validate options
+    if (testType !== "psychometric") {
+      const options = currentQuestionData.options;
+      if (!options || options.length === 0) {
+        form.setError("currentQuestion.options", {
           type: "manual",
-          message: "Option text is required",
+          message: "At least 2 options are required",
         });
+        return;
       }
-    });
 
-    if (hasEmpty) return;
+      // Check each option
+      let hasEmpty = false;
+      options.forEach((opt, index) => {
+        if (!opt.text.trim()) {
+          hasEmpty = true;
+          form.setError(`currentQuestion.options.${index}.text`, {
+            type: "manual",
+            message: "Option text is required",
+          });
+        }
+      });
 
-    // For psychometric tests, validate orientation is selected
-    if (testType === "psychometric" && !currentQuestionData.orientation) {
-      form.setError("currentQuestion.orientation", {
+      if (hasEmpty) return;
+    }
+
+    // For psychometric tests, validate questionOrientation is selected
+    if (testType === "psychometric" && !currentQuestionData.questionOrientation) {
+      form.setError("currentQuestion.questionOrientation", {
         message: "Question orientation is required for psychometric tests",
+      });
+      return;
+    }
+
+    // For psychometric tests, validate dimension is provided
+    if (testType === "psychometric" && !currentQuestionData.dimension?.trim()) {
+      form.setError("currentQuestion.dimension", {
+        message: "Question dimension is required for psychometric tests",
       });
       return;
     }
 
     if (editingQuestionNumber !== null) {
       const updatedQuestions = [...questions];
-      updatedQuestions[editingQuestionNumber - 1] = {
+      const questionData: any = {
         ...currentQuestionData,
         questionNo: editingQuestionNumber,
-        // Remove points for psychometric tests
-        ...(testType === "psychometric" ? { points: undefined } : {}),
       };
+      
+      // For psychometric tests, ensure points is 1 and remove options
+      if (testType === "psychometric") {
+        questionData.points = 1;
+        delete questionData.options;
+        // Map orientation to questionOrientation if needed
+        if (questionData.orientation && !questionData.questionOrientation) {
+          questionData.questionOrientation = questionData.orientation.toUpperCase();
+          delete questionData.orientation;
+        }
+      }
+      
+      updatedQuestions[editingQuestionNumber - 1] = questionData;
       form.setValue("questions", updatedQuestions);
       setEditingQuestionNumber(null);
     } else {
       // Add new question
-      const newQuestion = {
+      const questionData: any = {
         ...currentQuestionData,
         questionNo: questions.length + 1,
-        // Remove points for psychometric tests
-        ...(testType === "psychometric" ? { points: undefined } : {}),
       };
-      form.setValue("questions", [...questions, newQuestion]);
+      
+      // For psychometric tests, ensure points is 1 and remove options
+      if (testType === "psychometric") {
+        questionData.points = 1;
+        delete questionData.options;
+        // Map orientation to questionOrientation if needed
+        if (questionData.orientation && !questionData.questionOrientation) {
+          questionData.questionOrientation = questionData.orientation.toUpperCase();
+          delete questionData.orientation;
+        }
+      }
+      
+      form.setValue("questions", [...questions, questionData]);
     }
 
     // Reset current question
     form.setValue("currentQuestion", {
       text: "",
       type: "single",
-      points: testType === "psychometric" ? undefined : 5,
+      points: testType === "psychometric" ? 1 : 5,
       imageUrl: "",
-      options: testType === "psychometric" && psychometricConfig?.defaultOptions?.length 
-        ? psychometricConfig.defaultOptions.map(opt => ({
-            text: opt.text,
-            isCorrect: false,
-            score: opt.score,
-          }))
-        : [
-            { text: "", isCorrect: false, score: 0 },
-            { text: "", isCorrect: false, score: 0 },
-            { text: "", isCorrect: false, score: 0 },
-            { text: "", isCorrect: false, score: 0 },
-          ],
+      options: testType === "psychometric" ? undefined : [
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+      ],
       orientation: undefined,
+      questionOrientation: undefined,
       dimension: "",
     });
   };
@@ -265,7 +319,21 @@ export function TestCreationForm({
       (q) => q.questionNo === questionNumber
     );
     if (questionToEdit) {
-      form.setValue("currentQuestion", questionToEdit);
+      const testType = form.getValues("type");
+      const questionData: any = { ...questionToEdit };
+      
+      // For psychometric tests, ensure questionOrientation is set
+      if (testType === "psychometric") {
+        if (questionData.orientation && !questionData.questionOrientation) {
+          questionData.questionOrientation = questionData.orientation.toUpperCase();
+        }
+        // Ensure points is set to 1 if not present
+        if (!questionData.points) {
+          questionData.points = 1;
+        }
+      }
+      
+      form.setValue("currentQuestion", questionData);
       setEditingQuestionNumber(questionNumber);
     }
   };
@@ -285,21 +353,16 @@ export function TestCreationForm({
       form.setValue("currentQuestion", {
         text: "",
         type: "single",
-        points: testType === "psychometric" ? undefined : 5,
+        points: testType === "psychometric" ? 1 : 5,
         imageUrl: "",
-        options: testType === "psychometric" && psychometricConfig?.defaultOptions?.length 
-          ? psychometricConfig.defaultOptions.map(opt => ({
-              text: opt.text,
-              isCorrect: false,
-              score: opt.score,
-            }))
-          : [
-              { text: "", isCorrect: false, score: 0 },
-              { text: "", isCorrect: false, score: 0 },
-              { text: "", isCorrect: false, score: 0 },
-              { text: "", isCorrect: false, score: 0 },
-            ],
+        options: testType === "psychometric" ? undefined : [
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+          { text: "", isCorrect: false, score: 0 },
+        ],
         orientation: undefined,
+        questionOrientation: undefined,
         dimension: "",
       });
     }
@@ -307,42 +370,73 @@ export function TestCreationForm({
 
   const handleCancelEdit = () => {
     const testType = form.getValues("type");
-    const psychometricConfig = form.getValues("psychometricConfig");
     
     setEditingQuestionNumber(null);
     form.setValue("currentQuestion", {
       text: "",
       type: "single",
-      points: testType === "psychometric" ? undefined : 5,
+      points: testType === "psychometric" ? 1 : 5,
       imageUrl: "",
-      options: testType === "psychometric" && psychometricConfig?.defaultOptions?.length 
-        ? psychometricConfig.defaultOptions.map(opt => ({
-            text: opt.text,
-            isCorrect: false,
-            score: opt.score,
-          }))
-        : [
-            { text: "", isCorrect: false, score: 0 },
-            { text: "", isCorrect: false, score: 0 },
-            { text: "", isCorrect: false, score: 0 },
-            { text: "", isCorrect: false, score: 0 },
-          ],
+      options: testType === "psychometric" ? undefined : [
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+        { text: "", isCorrect: false, score: 0 },
+      ],
       orientation: undefined,
+      questionOrientation: undefined,
       dimension: "",
     });
   };
 
   const onSubmit = async (data: TestFormData) => {
     try {
-      const payload = {
+      const isPsychometric = data.type === "psychometric";
+      
+      // Validate psychometric test fields
+      if (isPsychometric && (!data.likertScale || data.likertScale.length < 2)) {
+        form.setError("likertScale", {
+          type: "manual",
+          message: "At least 2 Likert scale options are required",
+        });
+        return;
+      }
+      
+      // Transform questions for psychometric tests
+      const transformedQuestions = data.questions.map((q: any) => {
+        if (isPsychometric) {
+          const question: any = {
+            text: q.text,
+            type: q.type,
+            points: q.points || 1,
+            questionNo: q.questionNo,
+            questionOrientation: q.questionOrientation || (q.orientation ? q.orientation.toUpperCase() : undefined),
+            dimension: q.dimension,
+          };
+          // Remove options for psychometric tests
+          if (q.imageUrl) question.imageUrl = q.imageUrl;
+          return question;
+        }
+        return q;
+      });
+
+      const payload: any = {
         title: data.title,
-        type: data.type,
         description: data.description,
         isActive: data.isActive,
         duration: data.duration,
-        questions: data.questions,
-        ...(data.type === "psychometric" && data.psychometricConfig ? { psychometricConfig: data.psychometricConfig } : {}),
+        questions: transformedQuestions,
       };
+
+      if (isPsychometric) {
+        // For psychometric tests, use testCategory instead of type
+        payload.testCategory = "PSYCHOMETRIC";
+        payload.likertScale = data.likertScale || [];
+        payload.likertMin = data.likertMin;
+        payload.likertMax = data.likertMax;
+      } else {
+        payload.type = data.type;
+      }
 
       if (isEditing && testId) {
         const res = await updateTestMutation({ id: testId, payload }).unwrap();

@@ -6,8 +6,9 @@ export interface QuestionPayload {
   points?: number;
   questionNo: number;
   imageUrl?: string;
-  options: OptionPayload[];
+  options?: OptionPayload[]; // Optional for psychometric tests
   // Psychometric-specific fields
-  orientation?: "straight" | "reverse";
+  orientation?: "straight" | "reverse"; // For backward compatibility
+  questionOrientation?: "STRAIGHT" | "REVERSE"; // For psychometric tests
   dimension?: string;
 }

@@ -157,15 +157,11 @@ export function QuestionCreationForm({
     form.setValue("currentQuestion", {
       text: "",
       type: "single" as const,
-      points: isPsychometric ? undefined : 5,
+      points: isPsychometric ? 1 : 5,
       imageUrl: "",
-      options: isPsychometric && psychometricConfig?.defaultOptions?.length 
-        ? psychometricConfig.defaultOptions.map((opt: { text: string; score: number }) => ({
-            text: opt.text,
-            isCorrect: false,
-          }))
-        : defaultOptions,
+      options: isPsychometric ? undefined : defaultOptions,
       orientation: undefined,
+      questionOrientation: undefined,
       dimension: "",
     });
   };
@@ -253,20 +249,21 @@ export function QuestionCreationForm({
           </h3>
           
           <Field.Select
-            name="currentQuestion.orientation"
+            name="currentQuestion.questionOrientation"
             label="Question Orientation"
             placeholder="Select orientation"
             options={[
-              { value: "straight", label: "Straight (1-5 scoring)" },
-              { value: "reverse", label: "Reverse (5-1 scoring)" },
+              { value: "STRAIGHT", label: "Straight" },
+              { value: "REVERSE", label: "Reverse" },
             ]}
             required
           />
 
           <Field.Text
             name="currentQuestion.dimension"
-            label="Question Dimension (Optional)"
-            placeholder="e.g., Extraversion, Neuroticism"
+            label="Question Dimension"
+            placeholder="e.g., EXTRAVERSION, CONSCIENTIOUSNESS, EMOTIONAL_STABILITY"
+            required
           />
         </div>
       )}
@@ -282,11 +279,13 @@ export function QuestionCreationForm({
         />
       )}
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          {isPsychometric ? "Response Options" : isBoolean ? "True/False Options" : "Answer Options"}
-        </label>
-        {optionFields.map((field, index) => (
+      {/* Hide options section for psychometric tests */}
+      {!isPsychometric && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            {isBoolean ? "True/False Options" : "Answer Options"}
+          </label>
+          {optionFields.map((field, index) => (
           <div key={field.id}>
             <div className="flex items-center space-x-2">
               <input
@@ -341,10 +340,30 @@ export function QuestionCreationForm({
             )}
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
-      {/* Add Option Button - Hide for boolean questions */}
-      {!isBoolean && (
+      {/* Show Likert Scale info for psychometric tests */}
+      {isPsychometric && (
+        <div className="space-y-2 p-4 border rounded-lg bg-gray-50">
+          <label className="text-sm font-medium leading-none">
+            Response Scale
+          </label>
+          <p className="text-xs text-gray-600">
+            This question will use the Likert scale defined in the test configuration.
+          </p>
+          <div className="mt-2 space-y-1">
+            {form.watch("likertScale")?.map((item: any, index: number) => (
+              <div key={index} className="text-sm text-gray-700">
+                <span className="font-medium">{item.value}:</span> {item.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Add Option Button - Hide for boolean and psychometric questions */}
+      {!isBoolean && !isPsychometric && (
         <Button
           onClick={(e) => {
             e.preventDefault();
