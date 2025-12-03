@@ -124,7 +124,6 @@ export function TestDashboard() {
         isLoading={isLoading}
         totalTests={allTestsData?.length || 0}
         activeTests={activeTests}
-        completedAttempts={testAttemptsCount?.count || 0}
         userRole={user?.role}
       />
 

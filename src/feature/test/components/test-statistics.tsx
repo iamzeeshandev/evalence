@@ -1,11 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Calendar, Play } from "lucide-react";
+import { BookOpen, PauseCircle, Play } from "lucide-react";
 
 interface TestStatisticsProps {
   isLoading: boolean;
   totalTests: number;
   activeTests: number;
-  completedAttempts: number;
   userRole?: string;
 }
 
@@ -13,9 +12,10 @@ export function TestStatistics({
   isLoading,
   totalTests,
   activeTests,
-  completedAttempts,
   userRole,
 }: TestStatisticsProps) {
+  const inactiveTests = Math.max(totalTests - activeTests, 0);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card>
@@ -24,8 +24,8 @@ export function TestStatistics({
             <div>
               <p className="text-sm font-medium text-muted-foreground">
                 {userRole === "employee"
-                  ? "Assigned Tests"
-                  : "Total Evaluation"}
+                  ? "Assigned Assessments"
+                  : "Total Assessments"}
               </p>
               <p className="text-2xl font-bold">
                 {isLoading ? "..." : totalTests}
@@ -40,13 +40,13 @@ export function TestStatistics({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Active Evaluations
+                Active Assessments
               </p>
               <p className="text-2xl font-bold">
                 {isLoading ? "..." : activeTests}
               </p>
             </div>
-            <Play className="h-8 w-8 text-accent" />
+            <Play className="h-8 w-8 text-primary" />
           </div>
         </CardContent>
       </Card>
@@ -55,11 +55,13 @@ export function TestStatistics({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Completed Assessments
+                Inactive Assessments
               </p>
-              <p className="text-2xl font-bold">{completedAttempts}</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? "..." : inactiveTests}
+              </p>
             </div>
-            <Calendar className="h-8 w-8 text-chart-2" />
+            <PauseCircle className="h-8 w-8 text-primary" />
           </div>
         </CardContent>
       </Card>

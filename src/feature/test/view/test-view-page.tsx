@@ -10,9 +10,31 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useGetTestByIdQuery } from "@/services/rtk-query/tests/tests-apis";
-import { Clock, ArrowLeft } from "lucide-react";
+import { TestResponse } from "@/services/rtk-query/tests/tests-type";
+import {
+  Activity,
+  ArrowLeft,
+  BookOpenCheck,
+  CalendarClock,
+  Clock3,
+  Layers3,
+  ListChecks,
+  RefreshCcw,
+} from "lucide-react";
+import { ReactNode } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ReadonlyQuestionsListView } from "../components/readonly-questions-list-view";
+
+type ExtendedTestResponse = TestResponse & {
+  testCategory?: string;
+  likertScale?: Array<{ label: string; value: number }>;
+  likertMin?: number;
+  likertMax?: number;
+  psychometricConfig?: {
+    scoringStandard?: string;
+    defaultOptions?: Array<{ text: string; score: number }>;
+  };
+};
 
 export function TestViewPage() {
   const router = useRouter();
@@ -54,6 +76,93 @@ export function TestViewPage() {
     );
   }
 
+  const extendedTest = test as ExtendedTestResponse;
+
+  const formatLabel = (value?: string | number | null) => {
+    if (value === null || value === undefined || value === "") return "—";
+    if (typeof value === "number") return value.toString();
+    return value
+      .replace(/[_-]/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const formatDate = (value?: string | null) => {
+    if (!value) return "—";
+    try {
+      return new Date(value).toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+    } catch {
+      return value;
+    }
+  };
+
+  const isPsychometric =
+    extendedTest.testCategory === "PSYCHOMETRIC" ||
+    extendedTest.type?.toLowerCase() === "psychometric";
+
+  const likertScale = extendedTest.likertScale ?? [];
+
+  const infoRows: Array<{
+    label: string;
+    icon: ReactNode;
+    helper?: string;
+    value?: string;
+    node?: ReactNode;
+  }> = [
+    {
+      label: "Status",
+      icon: <Activity className="h-4 w-4 text-blue-500" />,
+      helper: extendedTest.isActive
+        ? "Participants can access this assessment"
+        : "Hidden from participants",
+      node: (
+        <Badge variant={extendedTest.isActive ? "default" : "secondary"}>
+          {extendedTest.isActive ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+    {
+      label: "Assessment Type",
+      icon: <BookOpenCheck className="h-4 w-4 text-purple-500" />,
+      helper: "Question structure & evaluation style",
+      value: formatLabel(extendedTest.type),
+    },
+    {
+      label: "Category",
+      icon: <Layers3 className="h-4 w-4 text-amber-500" />,
+      helper: isPsychometric
+        ? "Psychometric scoring with Likert responses"
+        : "Standard assessment configuration",
+      value: formatLabel(extendedTest.testCategory ?? extendedTest.type),
+    },
+    {
+      label: "Duration",
+      icon: <Clock3 className="h-4 w-4 text-emerald-500" />,
+      helper: "Recommended completion window",
+      value: `${extendedTest.duration} minutes`,
+    },
+    {
+      label: "Questions",
+      icon: <ListChecks className="h-4 w-4 text-indigo-500" />,
+      helper: "Total configured questions",
+      value: `${extendedTest.questions?.length ?? 0}`,
+    },
+    {
+      label: "Created On",
+      icon: <CalendarClock className="h-4 w-4 text-gray-500" />,
+      helper: "Initial publish date",
+      value: formatDate(extendedTest.createdAt),
+    },
+    {
+      label: "Last Updated",
+      icon: <RefreshCcw className="h-4 w-4 text-gray-500" />,
+      helper: "Most recent configuration change",
+      value: formatDate(extendedTest.updatedAt),
+    },
+  ];
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -72,76 +181,86 @@ export function TestViewPage() {
         </Button>
       </div>
 
-      {/* Test Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center p-2 rounded-full bg-blue-100">
-                <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <Badge variant={test.isActive ? "default" : "secondary"} className="mt-1">
-                  {test.isActive ? "Active" : "Inactive"}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center p-2 rounded-full bg-green-100">
-                <Clock className="h-4 w-4 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Duration</p>
-                <p className="font-medium">{test.duration} minutes</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center p-2 rounded-full bg-purple-100">
-                <div className="w-4 h-4 text-purple-500 flex items-center justify-center">Q</div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Questions</p>
-                <p className="font-medium">{test.questions?.length || 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center p-2 rounded-full bg-amber-100">
-                <div className="w-4 h-4 bg-amber-500 rounded-full"></div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Created</p>
-                <p className="font-medium">
-                  {new Date(test.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Test Description Card */}
-      <Card>
+      {/* Test Information */}
+      <Card className="shadow-sm border border-border/80">
         <CardHeader>
-          <CardTitle>Description</CardTitle>
+          <CardTitle>Test Information</CardTitle>
+          <CardDescription>
+            Comprehensive overview tailored for every assessment category
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">{test.description || "No description provided."}</p>
+        <CardContent className="space-y-6">
+          <div className="rounded-2xl border bg-card/60">
+            {infoRows.map((item) => (
+              <div
+                key={item.label}
+                className="flex flex-col gap-3 border-b px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-muted p-2">{item.icon}</div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {item.label}
+                    </p>
+                    {item.helper && (
+                      <p className="text-xs text-muted-foreground">
+                        {item.helper}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-base font-semibold text-foreground">
+                  {item.node ?? item.value ?? "—"}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-xl border bg-muted/30 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Description
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-foreground">
+              {extendedTest.description?.trim() || "No description provided."}
+            </p>
+          </div>
+
+          {isPsychometric && (
+            <div className="rounded-xl border bg-purple-50/60 p-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">
+                Psychometric Configuration
+              </p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">Scoring Standard</p>
+                  <p className="text-base font-semibold text-foreground">
+                    {extendedTest.psychometricConfig?.scoringStandard ||
+                      (extendedTest.likertMin !== undefined &&
+                      extendedTest.likertMax !== undefined
+                        ? `${extendedTest.likertMin} - ${extendedTest.likertMax} scale`
+                        : "Likert scale")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Response Options</p>
+                  <p className="text-base font-semibold text-foreground">
+                    {likertScale.length
+                      ? `${likertScale.length} choices`
+                      : "Not configured"}
+                  </p>
+                </div>
+              </div>
+              {likertScale.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {likertScale.map((item, index) => (
+                    <Badge key={`${item.value}-${index}`} variant="outline">
+                      {item.value}: {item.label}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
