@@ -73,7 +73,7 @@ export function QuestionsListView({
       className="space-y-1.5  overflow-y-auto scroll-smooth"
       style={{ maxHeight }}
     >
-      {[...questions].reverse().map((question, index) => ( // Create a copy before reversing
+      {[...questions].sort((a, b) => a.questionNo - b.questionNo).map((question, index) => (
         <div
           key={question.questionNo} // Changed from index to questionNo for better key stability
           className="border-b border-gray-150 py-3 bg-white hover:bg-gray-50 transition-colors duration-150 last:border-b-0"

@@ -18,17 +18,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { useGetAllTestsQuery } from "@/services/rtk-query";
-import {
-  useGetTestAttemptsCountQuery,
-  useStartTestAttemptMutation,
-} from "@/services/rtk-query/test-attempt/test-attempt-api";
+import { useGetTestAttemptsCountQuery } from "@/services/rtk-query/test-attempt/test-attempt-api";
 import { TestResponse } from "@/services/rtk-query/tests/tests-type";
 import { Clock, Edit, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SearchFilter } from "../components/search-filter";
 import { TestStatistics } from "../components/test-statistics";
-import { TestTakingInterface } from "./test-taking-interface-view";
+
 import { TestCreationForm } from "./test-creation-form";
 
 export function TestDashboard() {
@@ -41,12 +38,11 @@ export function TestDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedTest, setSelectedTest] = useState<any>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showTestInterface, setShowTestInterface] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
 
   const { data: allTestsData, isLoading: isLoadingAll } = useGetAllTestsQuery();
   const { data: testAttemptsCount } = useGetTestAttemptsCountQuery();
-  const [testAttemptMut, testAttemptMutState] = useStartTestAttemptMutation();
+
 
   const isLoading = isLoadingAll;
 
@@ -79,22 +75,7 @@ export function TestDashboard() {
     };
   };
 
-  const handleStartTest = async (test: TestResponse) => {
-    if (!test.id || !user) return;
-    try {
-      sessionStorage.removeItem("currentTestAttempt");
-      const result = await testAttemptMut({
-        testId: test.id,
-        userId: user?.id || "000",
-        batteryId: null,
-      }).unwrap();
-      sessionStorage.setItem("currentTestAttempt", `${result?.id}`);
-      setSelectedTest(test); // still store in state if you need it later
-      setShowTestInterface(true);
-    } catch (error) {
-      console.error("Failed to start test attempt:", error);
-    }
-  };
+
   const headerText = getHeaderText();
   const canCreateTests = ["super_admin", "employee", "company_admin"].includes(
     user?.role ?? ""
@@ -249,14 +230,9 @@ export function TestDashboard() {
                       <Button
                         className="w-full cursor-pointer"
                         variant={test.isActive ? "default" : "secondary"}
-                        onClick={() => handleStartTest(test)}
-                        disabled={
-                          !test.isActive || (test.questions?.length || 0) === 0
-                        }
+                        onClick={() => router.push(`/test/view/${test.id}`)}
                       >
-                        {(test.questions?.length || 0) === 0
-                          ? "No Questions"
-                          : "Take Assessment"}
+                        View Test
                       </Button>
                     </div>
                   </CardContent>
@@ -301,9 +277,9 @@ export function TestDashboard() {
                           </Badge>
                         </td>
                         <td className="p-4">
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                            {test.duration} min
+                          <div className="flex items-center whitespace-nowrap min-w-[120px]">
+                            <Clock className="h-4 w-4 mr-2 text-muted-foreground flex-shrink-0" />
+                            <span className="truncate">{test.duration} min</span>
                           </div>
                         </td>
                         <td className="p-4">{test.questions?.length || 0}</td>
@@ -315,19 +291,9 @@ export function TestDashboard() {
                               variant="outline"
                               size="sm"
                               className="pointer"
-                              onClick={() => handleStartTest(test)}
-                              disabled={
-                                !test.isActive ||
-                                (test.questions?.length || 0) === 0 ||
-                                (user?.role === "employee" &&
-                                  new Date("2025-12-31") < new Date())
-                              }
+                              onClick={() => router.push(`/test/view/${test.id}`)}
                             >
-                              {(test.questions?.length || 0) === 0
-                                ? "No Questions"
-                                : user?.role === "employee"
-                                ? "Expired"
-                                : "Take Assessment"}
+                              View Test
                             </Button>
                             {canCreateTests && (
                               <Button
@@ -368,25 +334,6 @@ export function TestDashboard() {
           </DialogContent>
         </Dialog>
       )}
-
-      {/* Test Taking Interface Dialog */}
-      <Dialog open={showTestInterface} onOpenChange={setShowTestInterface}>
-        <DialogContent
-          onInteractOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-          className="max-w-4xl sm:max-w-3xl max-h-[90vh] overflow-y-auto"
-        >
-          <DialogHeader>
-            <DialogTitle>Taking Test: {selectedTest?.title}</DialogTitle>
-          </DialogHeader>
-          {selectedTest && (
-            <TestTakingInterface
-              test={selectedTest}
-              onClose={() => setShowTestInterface(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
