@@ -86,6 +86,7 @@ export function TestDashboard() {
       const result = await testAttemptMut({
         testId: test.id,
         userId: user?.id || "000",
+        batteryId: null,
       }).unwrap();
       sessionStorage.setItem("currentTestAttempt", `${result?.id}`);
       setSelectedTest(test); // still store in state if you need it later
@@ -107,7 +108,6 @@ export function TestDashboard() {
       {/* Header */}
       <div
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-        // onClick={() => router.push(`/test/add/`)}
       >
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -220,8 +220,8 @@ export function TestDashboard() {
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <CardDescription className="mb-4 line-clamp-2">
+                  <CardContent className="flex flex-col h-full">
+                    <CardDescription className="mb-4 line-clamp-2 flex-grow">
                       {test.description}
                     </CardDescription>
                     <div className="space-y-2 text-sm">
@@ -245,7 +245,7 @@ export function TestDashboard() {
                         </span>
                       </div> */}
                     </div>
-                    <div className="mt-4 pt-4 border-t">
+                    <div className="mt-4 pt-4 border-t mt-auto">
                       <Button
                         className="w-full cursor-pointer"
                         variant={test.isActive ? "default" : "secondary"}
