@@ -21,8 +21,9 @@ interface Question {
     createdAt: string;
     updatedAt: string;
   }>;
-  // Psychometric-specific fields
+  // Psychometric-specific fields (support both naming conventions)
   orientation?: "straight" | "reverse";
+  questionOrientation?: "STRAIGHT" | "REVERSE";
   dimension?: string;
 }
 
@@ -80,7 +81,7 @@ export function ReadonlyQuestionsListView({
           key={question.questionNo}
           className="border-b border-gray-150 py-3 bg-white hover:bg-gray-50 transition-colors duration-150 last:border-b-0"
         >
-          {/* Header with question number */}
+          {/* Header with question number and psychometric badges */}
           <div className="flex justify-between items-start mb-2 px-3">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-700 rounded font-medium text-xs">
@@ -89,16 +90,22 @@ export function ReadonlyQuestionsListView({
               <h4 className="font-semibold text-gray-900 text-sm">
                 Q{question.questionNo}
               </h4>
+              {/* Psychometric badges - handle both field names */}
+              {(question.orientation || question.questionOrientation) && (
+                <div className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                  {question.questionOrientation?.toLowerCase() || question.orientation}
+                </div>
+              )}
+              {question.dimension && (
+                <div className="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded text-xs font-medium">
+                  {question.dimension}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-1">
               {question.points && (
                 <div className="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-xs font-medium">
                   {question.points} {question.points === 1 ? "pt" : "pts"}
-                </div>
-              )}
-              {question.orientation && (
-                <div className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                  {question.orientation}
                 </div>
               )}
             </div>
@@ -165,20 +172,6 @@ export function ReadonlyQuestionsListView({
                 )}
               </div>
             ))}
-          </div>
-
-          {/* Footer with correct answer indicator */}
-          <div className="mt-2 pt-1.5 border-t border-gray-100 px-3">
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>
-                {question.options.filter((opt) => opt.isCorrect).length === 1
-                  ? "1 correct"
-                  : question.orientation 
-                    ? `${question.orientation} orientation`
-                    : "0 correct"}
-              </span>
-              <span>{question.options.length} opts</span>
-            </div>
           </div>
         </div>
       ))}

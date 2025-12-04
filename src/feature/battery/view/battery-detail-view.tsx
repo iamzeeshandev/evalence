@@ -79,6 +79,11 @@ export function BatteryDetailView() {
   }, [battery]);
 
   const groupOptions = (groups || []).map((g) => ({ value: g.id, label: g.name }));
+  
+  // Filter out already assigned groups from the available groups list
+  const assignedGroupIds = batteryAssignmentsWithGroups?.map((assignment: any) => assignment.groupId) || [];
+  const availableGroupOptions = groupOptions.filter(group => !assignedGroupIds.includes(group.value));
+  
   const availableTests = tests?.filter(test => 
     !battery?.batteryTests?.some(bt => bt.testId === test.id)
   ) || [];
@@ -459,7 +464,11 @@ export function BatteryDetailView() {
                   <div className="text-sm text-muted-foreground text-center py-4">No tests added</div>
                 )}
                 {(battery.batteryTests || []).map((batteryTest) => (
-                  <div key={batteryTest.id} className="flex items-center justify-between p-3 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div 
+                    key={batteryTest.id} 
+                    className="flex items-center justify-between p-3 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/test/view/${batteryTest.testId}`)}
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm truncate">{batteryTest.test.title}</div>
                       <div className="text-xs text-muted-foreground">
@@ -473,7 +482,8 @@ export function BatteryDetailView() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setSelectedTestToRemove(batteryTest.testId);
                           setIsRemoveTestDialogOpen(true);
                         }}
@@ -508,7 +518,7 @@ export function BatteryDetailView() {
                     name="groupIds"
                     label="Groups"
                     placeholder="Select groups"
-                    options={groupOptions}
+                    options={availableGroupOptions}
                     multiple
                   />
                   

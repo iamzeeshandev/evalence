@@ -189,15 +189,37 @@ export function TestQuestionView() {
     // Save answer to backend
     if (testAttemptId && userId) {
       try {
+        // Get the current state of answers for this question
+        const currentAnswerState = [...answers];
+        const existingAnswerIndex = currentAnswerState.findIndex(a => a.questionId === questionId);
+        
+        let selectedOptionIds: string[];
+        if (existingAnswerIndex >= 0) {
+          if (isMultiSelect) {
+            const selectedOptions = currentAnswerState[existingAnswerIndex].selectedOptionIds;
+            const optionIndex = selectedOptions.indexOf(optionId);
+            
+            if (optionIndex >= 0) {
+              // Remove option
+              selectedOptionIds = selectedOptions.filter(id => id !== optionId);
+            } else {
+              // Add option
+              selectedOptionIds = [...selectedOptions, optionId];
+            }
+          } else {
+            // For single-select, replace with new option
+            selectedOptionIds = [optionId];
+          }
+        } else {
+          // Add new answer
+          selectedOptionIds = [optionId];
+        }
+        
         const payload = {
           attemptId: testAttemptId,
           questionId,
           userId,
-          selectedOptionIds: isMultiSelect 
-            ? answers.find(a => a.questionId === questionId)?.selectedOptionIds.includes(optionId)
-              ? answers.find(a => a.questionId === questionId)?.selectedOptionIds.filter(id => id !== optionId) || []
-              : [...(answers.find(a => a.questionId === questionId)?.selectedOptionIds || []), optionId]
-            : [optionId],
+          selectedOptionIds,
           timeSpentIncrementSec: 10, // Increment time spent by 10 seconds
         };
         
@@ -461,23 +483,13 @@ export function TestQuestionView() {
       {/* Header with timer and progress */}
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => router.push("/take-test")}
-              className="h-8 w-8"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                {testName}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Question {currentQuestionIndex + 1} of {totalQuestions}
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {testName}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Question {currentQuestionIndex + 1} of {totalQuestions}
+            </p>
           </div>
           
           <div className="flex items-center gap-4">
@@ -538,7 +550,7 @@ export function TestQuestionView() {
             
             {/* Options */}
             <div className="space-y-3">
-              {currentQuestion.type === "multiple_choice" ? (
+              {currentQuestion.type === "multiple" ? (
                 <div className="space-y-3">
                   {currentQuestion.options.map((option: Option) => {
                     const isSelected = currentAnswer?.selectedOptionIds.includes(option.id) || false;
@@ -546,10 +558,10 @@ export function TestQuestionView() {
                       <div 
                         key={option.id}
                         className={`flex items-center space-x-2 p-4 border rounded-lg hover:bg-muted transition-colors cursor-pointer ${isSelected ? 'border-blue-500 bg-blue-50' : ''}`}
-                        onClick={() => handleAnswerSelect(currentQuestion.id, option.id, false)}
+                        onClick={() => handleAnswerSelect(currentQuestion.id, option.id, true)}
                       >
-                        <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
-                          {isSelected && <div className="h-2 w-2 rounded-full bg-white"></div>}
+                        <div className={`h-5 w-5 rounded border flex items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
+                          {isSelected && <div className="h-2 w-2 rounded bg-white"></div>}
                         </div>
                         <span>{option.text}</span>
                       </div>
@@ -564,10 +576,10 @@ export function TestQuestionView() {
                       <div 
                         key={option.id}
                         className={`flex items-center space-x-2 p-4 border rounded-lg hover:bg-muted transition-colors cursor-pointer ${isSelected ? 'border-blue-500 bg-blue-50' : ''}`}
-                        onClick={() => handleAnswerSelect(currentQuestion.id, option.id, true)}
+                        onClick={() => handleAnswerSelect(currentQuestion.id, option.id, false)}
                       >
-                        <div className={`h-5 w-5 rounded border flex items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
-                          {isSelected && <div className="h-2 w-2 rounded bg-white"></div>}
+                        <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
+                          {isSelected && <div className="h-2 w-2 rounded-full bg-white"></div>}
                         </div>
                         <span>{option.text}</span>
                       </div>

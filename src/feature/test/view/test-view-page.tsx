@@ -127,14 +127,6 @@ export function TestViewPage() {
       label: "Assessment Type",
       icon: <BookOpenCheck className="h-4 w-4 text-purple-500" />,
       helper: "Question structure & evaluation style",
-      value: formatLabel(extendedTest.type),
-    },
-    {
-      label: "Category",
-      icon: <Layers3 className="h-4 w-4 text-amber-500" />,
-      helper: isPsychometric
-        ? "Psychometric scoring with Likert responses"
-        : "Standard assessment configuration",
       value: formatLabel(extendedTest.testCategory ?? extendedTest.type),
     },
     {

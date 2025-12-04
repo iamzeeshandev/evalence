@@ -428,9 +428,18 @@ export function TestCreationForm({
         questions: transformedQuestions,
       };
 
+      // Map frontend type values to backend testCategory enum values
+      const typeMapping: Record<string, string> = {
+        "mcqs": "MCQ",
+        "pictorial": "PICTORIAL",
+        "boolean": "MCQ", // Boolean is a subtype of MCQ
+        "psychometric": "PSYCHOMETRIC"
+      };
+      
+      // Set the testCategory field for all test types
+      payload.testCategory = typeMapping[data.type] || "MCQ";
+      
       if (isPsychometric) {
-        // For psychometric tests, use testCategory instead of type
-        payload.testCategory = "PSYCHOMETRIC";
         payload.likertScale = data.likertScale || [];
         payload.likertMin = data.likertMin;
         payload.likertMax = data.likertMax;
