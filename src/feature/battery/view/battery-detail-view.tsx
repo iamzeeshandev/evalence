@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useGetBatteryByIdQuery, useAssignBatteryToGroupsMutation, useGetGroupsDropdownQuery, useGetAllTestsQuery, useAddTestsToBatteryMutation, useRemoveTestsFromBatteryMutation, useCreateMultipleBatteryAssignmentsMutation, useGetBatteryAssignmentsByBatteryIdQuery, useGetBatteryAssignmentsWithGroupsQuery } from "@/services/rtk-query";
+import { useGetBatteryByIdQuery, useAssignBatteryToGroupsMutation, useGetGroupsDropdownQuery, useGetAllTestsQuery, useAddTestsToBatteryMutation, useRemoveTestsFromBatteryMutation } from "@/services/rtk-query";
+import { useCreateMultipleBatteryAssignmentsMutation, useGetBatteryAssignmentsWithGroupsQuery, useDeleteBatteryAssignmentMutation } from "@/services/rtk-query/battery-assignment/battery-assignment-api";
 import { BatteryTestPayload } from "@/services/rtk-query/battery/battery-type";
 import { MultipleBatteryAssignmentPayload } from "@/services/rtk-query/battery-assignment/battery-assignment-type";
 import { useParams, useRouter } from "next/navigation";
@@ -42,16 +43,19 @@ export function BatteryDetailView() {
 
   const { data: groups } = useGetGroupsDropdownQuery();
   const { data: tests } = useGetAllTestsQuery();
-  const { data: batteryAssignments } = useGetBatteryAssignmentsByBatteryIdQuery(batteryId, {
+  const { data: batteryAssignmentsWithGroups, refetch: refetchBatteryAssignments } = useGetBatteryAssignmentsWithGroupsQuery(batteryId, {
     skip: !batteryId,
   });
-  const { data: batteryAssignmentsWithGroups } = useGetBatteryAssignmentsWithGroupsQuery(batteryId, {
-    skip: !batteryId,
-  });
+  
   const [assignToGroups, { isLoading: isAssigning }] = useAssignBatteryToGroupsMutation();
   const [addTests, { isLoading: isAddingTests }] = useAddTestsToBatteryMutation();
   const [removeTests, { isLoading: isRemovingTests }] = useRemoveTestsFromBatteryMutation();
   const [createMultipleAssignments, { isLoading: isCreatingAssignments }] = useCreateMultipleBatteryAssignmentsMutation();
+  const [deleteAssignment, { isLoading: isDeletingAssignment }] = useDeleteBatteryAssignmentMutation();
+
+  // State for delete confirmation dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null);
 
   const [isAddTestDialogOpen, setIsAddTestDialogOpen] = useState(false);
   const [isRemoveTestDialogOpen, setIsRemoveTestDialogOpen] = useState(false);
@@ -107,17 +111,54 @@ export function BatteryDetailView() {
   const handleAssignGroups = async (values: AssignGroupsForm) => {
     if (!batteryId) return;
     
-    const payload: MultipleBatteryAssignmentPayload = {
-      batteryId,
-      groups: values.groupIds.map(groupId => ({
-        groupId,
-        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
-        notes: values.groupNotes[groupId] || undefined
-      }))
-    };
+    try {
+      const payload: MultipleBatteryAssignmentPayload = {
+        batteryId,
+        groups: values.groupIds.map(groupId => ({
+          groupId,
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+          notes: values.groupNotes[groupId] || undefined
+        }))
+      };
+      
+      await createMultipleAssignments(payload).unwrap();
+      groupsForm.reset();
+    } catch (error: any) {
+      console.error("Failed to assign battery to groups:", error);
+      // Handle error - show notification to user
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    // Set the assignment to delete and open the confirmation dialog
+    setAssignmentToDelete(assignmentId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteAssignment = async () => {
+    if (!assignmentToDelete) return;
     
-    await createMultipleAssignments(payload).unwrap();
-    groupsForm.reset();
+    try {
+      await deleteAssignment(assignmentToDelete).unwrap();
+      // Refetch the battery assignments to update the UI
+      refetchBatteryAssignments();
+      // Close the dialog
+      setIsDeleteDialogOpen(false);
+      setAssignmentToDelete(null);
+    } catch (error: any) {
+      console.error("Failed to delete battery assignment:", error);
+      // Handle error - show notification to user
+      alert("Failed to remove group assignment. Please try again.");
+      // Close the dialog
+      setIsDeleteDialogOpen(false);
+      setAssignmentToDelete(null);
+    }
+  };
+
+  const cancelDeleteAssignment = () => {
+    // Close the dialog and reset the assignment to delete
+    setIsDeleteDialogOpen(false);
+    setAssignmentToDelete(null);
   };
 
   const handleAddTest = async (values: AddTestForm) => {
@@ -593,6 +634,14 @@ export function BatteryDetailView() {
                         >
                           {assignment.status}
                         </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteAssignment(assignment.id)}
+                          className="h-7 w-7 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -698,6 +747,33 @@ export function BatteryDetailView() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Assignment Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this group assignment? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={cancelDeleteAssignment}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteAssignment} disabled={isDeletingAssignment}>
+              {isDeletingAssignment ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                "Remove Assignment"
+              )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

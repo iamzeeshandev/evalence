@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Field } from "@/components/core/hook-form";
-import { useSaveGroupMutation, useUpdateGroupMutation, useGetGroupByIdQuery, useGetAllUsersQuery, useGetCompaniesDropdownQuery } from "@/services/rtk-query";
+import { useSaveGroupMutation, useUpdateGroupMutation, useGetGroupByIdQuery, useGetAllUsersQuery, useGetCompaniesDropdownQuery, useGetUsersByCompanyQuery } from "@/services/rtk-query";
 import { GroupPayload } from "@/services/rtk-query/groups/groups-type";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 const groupSchema = z.object({
@@ -38,12 +38,25 @@ export function GroupForm() {
   const { data: groupData, isLoading: isLoadingGroup } = useGetGroupByIdQuery(groupId, {
     skip: !isEditMode,
   });
-  const { data: users } = useGetAllUsersQuery();
   const { data: companies, isLoading: isLoadingCompanies } = useGetCompaniesDropdownQuery();
+  
+  // State to track selected company
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  
+  // Get all users (for initial load or when no company is selected)
+  const { data: allUsers } = useGetAllUsersQuery();
+  
+  // Get users by company when a company is selected
+  const { data: companyUsers, isLoading: isLoadingCompanyUsers } = useGetUsersByCompanyQuery(selectedCompanyId, {
+    skip: !selectedCompanyId,
+  });
 
-  const isLoading = isSaving || isUpdating || isLoadingGroup || isLoadingCompanies;
+  const isLoading = isSaving || isUpdating || isLoadingGroup || isLoadingCompanies || isLoadingCompanyUsers;
 
-  const userOptions = users?.map(user => ({
+  // Determine which users to show based on selected company
+  const usersToShow = selectedCompanyId ? companyUsers : allUsers;
+  
+  const userOptions = usersToShow?.map(user => ({
     value: user.id,
     label: `${user.firstName} ${user.lastName} (${user.email})`
   })) || [];
@@ -66,16 +79,25 @@ export function GroupForm() {
 
   useEffect(() => {
     if (isEditMode && groupData) {
+      const companyId = groupData.company?.id || "";
+      setSelectedCompanyId(companyId);
       form.reset({
         name: groupData.name,
         description: groupData.description || "",
         isActive: groupData.isActive,
         userIds: groupData.users?.map(user => user.id) || [],
-        companyId: groupData.company?.id || "",
+        companyId: companyId,
       });
     }
   }, [isEditMode, groupData, form]);
 
+  // Handle company selection change
+  const handleCompanyChange = (value: string | string[]) => {
+    // Since it's a single select, we expect a string
+    const companyId = Array.isArray(value) ? value[0] || '' : value;    setSelectedCompanyId(companyId);
+    // Clear selected users when company changes
+    form.setValue("userIds", []);
+  };
   const onSubmit = async (values: GroupFormData) => {
     try {
       // Prepare payload - companyId is required by backend
@@ -157,15 +179,17 @@ export function GroupForm() {
                   options={companyOptions}
                   disabled={isLoadingCompanies}
                   required
+                  onValueChange={handleCompanyChange}
                 />
 
                 <Field.Select
                   name="userIds"
                   label="Group Members"
-                  placeholder="Select users to add to the group"
+                  placeholder={selectedCompanyId ? "Select users from the selected company" : "Select a company first"}
                   options={userOptions}
                   multiple
                   required
+                  disabled={!selectedCompanyId || isLoadingCompanyUsers}
                 />
 
                 <Field.Switch

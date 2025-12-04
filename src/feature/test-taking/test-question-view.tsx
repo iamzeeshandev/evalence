@@ -327,13 +327,29 @@ export function TestQuestionView() {
   // Get questions based on mode
   let allQuestions: Question[] = [];
   let testName = batteryName;
+  let testLikertScale: { label: string; value: number }[] = [];
+  
+  // Check if the test is psychometric
+  const isPsychometricBattery = isBatteryMode && batteryData && 
+    (batteryData.batteryTests?.[0]?.test?.testCategory === "PSYCHOMETRIC" || 
+     batteryData.batteryTests?.[0]?.test?.type?.toLowerCase() === "psychometric");
+     
+  const isPsychometricTest = !isBatteryMode && testData && 
+    (testData.testCategory === "PSYCHOMETRIC" || 
+     testData.type?.toLowerCase() === "psychometric");
   
   if (isBatteryMode && batteryData) {
     allQuestions = [...(batteryData.batteryTests?.flatMap(bt => bt.test?.questions || []) || [])];
+    // Get likert scale from the first test in the battery (assuming all tests in a battery have the same scale)
+    testLikertScale = batteryData.batteryTests?.[0]?.test?.likertScale || [];
   } else if (!isBatteryMode && testData) {
     allQuestions = [...(testData.questions || [])];
     testName = testData.title || testName;
+    testLikertScale = testData.likertScale || [];
   }
+  
+  // Check if this is a psychometric test
+  const isPsychometricTestMode = isPsychometricBattery || isPsychometricTest;
   
   // Sort questions by questionNo to ensure they are in the correct order
   allQuestions.sort((a, b) => {
@@ -368,6 +384,9 @@ export function TestQuestionView() {
   // Check if current question is answered
   const currentAnswer = answers.find(a => a.questionId === currentQuestion.id);
   const isAnswered = currentAnswer && currentAnswer.selectedOptionIds.length > 0;
+  
+  // Check if this is a psychometric test
+  const isPsychometricTestCheck = isPsychometricTestMode && testLikertScale && testLikertScale.length > 0;
   
   // If test is submitted, show results
   if (isTestSubmitted) {
@@ -550,7 +569,26 @@ export function TestQuestionView() {
             
             {/* Options */}
             <div className="space-y-3">
-              {currentQuestion.type === "multiple" ? (
+              {isPsychometricTestCheck ? (
+                // For psychometric tests, display likert scale options
+                <div className="space-y-3">
+                  {testLikertScale.map((scaleItem) => {
+                    const isSelected = currentAnswer?.selectedOptionIds.includes(scaleItem.value.toString()) || false;
+                    return (
+                      <div 
+                        key={scaleItem.value}
+                        className={`flex items-center space-x-2 p-4 border rounded-lg hover:bg-muted transition-colors cursor-pointer ${isSelected ? 'border-blue-500 bg-blue-50' : ''}`}
+                        onClick={() => handleAnswerSelect(currentQuestion.id, scaleItem.value.toString(), false)}
+                      >
+                        <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
+                          {isSelected && <div className="h-2 w-2 rounded-full bg-white"></div>}
+                        </div>
+                        <span>{scaleItem.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : currentQuestion.type === "multiple" ? (
                 <div className="space-y-3">
                   {currentQuestion.options.map((option: Option) => {
                     const isSelected = currentAnswer?.selectedOptionIds.includes(option.id) || false;

@@ -38,10 +38,14 @@ export interface TestResponse {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  testCategory?: string;
+  likertScale?: Array<{
+    label: string;
+    value: number;
+  }>;
   questions: Question[];
   batteryTests?: BatteryTest[];
 }
-
 export interface BatteryTest {
   id: string;
   batteryId: string;

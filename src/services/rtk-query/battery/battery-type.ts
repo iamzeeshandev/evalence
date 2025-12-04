@@ -10,9 +10,14 @@ export interface Test {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  testCategory?: string;
+  type?: string;
+  likertScale?: Array<{
+    label: string;
+    value: number;
+  }>;
   questions?: Question[];
 }
-
 export interface BatteryTest {
   id: string;
   batteryId: string;

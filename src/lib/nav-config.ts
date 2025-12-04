@@ -14,11 +14,11 @@ export interface NavItem {
 export const getRoleBasedNavItems = (userRole: UserRole): NavItem[] => {
   // Define all navigation items with role permissions
   const allNavItems: NavItem[] = [
-    {
-      title: "Take Test",
-      url: "/take-test",
-      roles: [UserRole.EMPLOYEE],
-    },
+    // {
+    //   title: "Take Test",
+    //   url: "/take-test",
+    //   roles: [UserRole.EMPLOYEE],
+    // },
     {
       title: "User Tests",
       url: "/user-tests",

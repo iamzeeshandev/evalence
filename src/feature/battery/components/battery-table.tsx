@@ -4,6 +4,7 @@ import Table from "@/components/core/table/table";
 import { Button } from "@/components/ui/button";
 import { useTableState } from "@/hooks/use-table-state";
 import { useGetAllBatteriesQuery, useDeleteBatteryMutation } from "@/services/rtk-query";
+import { useGetBatteryAssignmentsWithGroupsQuery } from "@/services/rtk-query/battery-assignment/battery-assignment-api";
 import { Battery } from "@/services/rtk-query/battery/battery-type";
 import { formatDate } from "@/lib/date-utils";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -79,6 +80,25 @@ export function BatteryTable() {
         return (
           <span className="text-muted-foreground">
             {count} test{count !== 1 ? 's' : ''}
+          </span>
+        );
+      },
+    }),
+    // Add Groups Count Column
+    columnHelper.display({
+      id: "groupsCount",
+      header: "Groups Count",
+      cell: ({ row }) => {
+        const battery = row.original;
+        // Using the existing hook to get group assignments for this battery
+        const { data: assignments } = useGetBatteryAssignmentsWithGroupsQuery(battery.id, {
+          skip: !battery.id,
+        });
+        
+        const count = assignments ? assignments.length : 0;
+        return (
+          <span className="text-muted-foreground">
+            {count} group{count !== 1 ? 's' : ''}
           </span>
         );
       },
